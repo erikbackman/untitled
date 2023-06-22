@@ -9,7 +9,7 @@
 
 (in-package :untitled)
 
-(defvar *shader-vao-vertex-program*
+(defvar *vs-src*
   "#version 330
 layout (location = 0) in vec3 aPos;
 void main()
@@ -18,7 +18,7 @@ void main()
 }
 ")
 
-(defvar *shader-vao-fragment-program*
+(defvar *fs-src*
   "#version 330
 
 out vec4 FragColor;
@@ -37,16 +37,34 @@ void main()
   (gl:matrix-mode :modelview)
   (gl:load-identity))
 
-(glfw:def-window-size-callback update-viewport (window w h)
-  (declare (ignore window))
-  (set-viewport w h))
+(defun my-compile-shader (type source)
+  (let ((shader (gl:create-shader type)))
+    (gl:shader-source shader source)
+    (gl:compile-shader shader)
+    shader))
 
-(glfw:def-key-callback quit-on-escape (window key scancode action mod-keys)
-  (declare (ignore window scancode mod-keys))
-  (when (and (eq key :escape) (eq action :press))
-    (glfw:set-window-should-close)))
+(defun my-create-shader (vs-src fs-src)
+  (let ((program (gl:create-program))
+	(vs (my-compile-shader :vertex-shader vs-src))
+	(fs (my-compile-shader :fragment-shader fs-src)))
+    (gl:attach-shader program vs)
+    (gl:attach-shader program fs)
+    (gl:link-program program)
+    (gl:validate-program program)
+    (gl:delete-shader vs)
+    (gl:delete-shader fs)
+    program))
 
-(defun basic-window-example ()
+(defun main ()
+  (glfw:def-window-size-callback update-viewport (window w h)
+    (declare (ignore window))
+    (set-viewport w h))
+
+  (glfw:def-key-callback quit-on-escape (window key scancode action mod-keys)
+    (declare (ignore window scancode mod-keys))
+    (when (and (eq key :escape) (eq action :press))
+      (glfw:set-window-should-close)))
+  
   (with-body-in-main-thread ()
     (glfw:with-init-window (:title "Window test" :width 600 :height 400)
       (setf %gl:*gl-get-proc-address* #'get-proc-address)
@@ -83,23 +101,9 @@ void main()
 	(gl:vertex-attrib-pointer 1 3 :float nil 0 (cffi:null-pointer))
 	(gl:enable-vertex-attrib-array 0)
 	(gl:enable-vertex-attrib-array 1)
-	
-	(let ((vs (gl:create-shader :vertex-shader))
-	      (fs (gl:create-shader :fragment-shader))
-	      (program nil))
-	  
-	  (gl:shader-source vs *shader-vao-vertex-program*)
-	  (gl:compile-shader vs)
-	  (gl:shader-source fs *shader-vao-fragment-program*)
-	  (gl:compile-shader fs)
 
-	  (print (gl:get-shader-info-log vs))
-	  (print (gl:get-shader-info-log fs))
-
-	  (setf program (gl:create-program))
-	  (gl:attach-shader program vs)
-	  (gl:attach-shader program fs)
-	  (gl:link-program program)
+	;; Create shaders
+	(let ((program (my-create-shader *vs-src* *fs-src*)))
 
 	  (loop until (window-should-close-p)
 		do (gl:with-pushed-matrix
@@ -108,10 +112,9 @@ void main()
 		     (gl:use-program program)
 		     (gl:draw-arrays :triangles 0 3)
 		     (swap-buffers))
-		do (poll-events))))))
-  )
+		do (poll-events)))))))
 
-(basic-window-example)
+(main)
 
 
 
