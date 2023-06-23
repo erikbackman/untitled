@@ -5,29 +5,55 @@
   (ql:quickload "trivial-main-thread"))
 
 (defpackage untitled
-  (:use :cl :glfw :trivial-main-thread :cl-opengl))
+  (:use :cl :glfw :trivial-main-thread)
+  (:import-from :cl-opengl))
 
 (in-package :untitled)
 
-(defvar *vs-src*
-  "#version 330
-layout (location = 0) in vec3 aPos;
+;; (defparameter *vs-src*
+;;   "#version 330
+;; layout (location = 0) in vec3 aPos;
+;; void main()
+;; {
+;;   gl_Position = vec4(aPos, 1.0);
+;; }
+;; ")
+
+(defparameter *vs-src*
+  "#version 330 core
+layout (location = 0) in vec3 aPos;   // the position variable has attribute position 0
+layout (location = 1) in vec3 aColor; // the color variable has attribute position 1
+  
+out vec3 myColor; // output a color to the fragment shader
+
 void main()
 {
-  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-")
+    gl_Position = vec4(aPos, 1.0);
+    myColor = aColor; // set ourColor to the input color we got from the vertex data
+}")
 
-(defvar *fs-src*
-  "#version 330
+;; (defparameter *fs-src*
+;;   "#version 330
 
-out vec4 FragColor;
+;; out vec4 FragColor;
+;; uniform vec4 myColor;
+;; uniform vec3 iResolution;
+;; void main()
+;; {
+;;   FragColor = myColor;
+;; }
+
+;; ")
+
+(defparameter *fs-src*
+  "#version 330 core
+out vec4 FragColor;  
+in vec3 myColor;
+  
 void main()
 {
-  FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);
-}
-
-")
+    FragColor = vec4(myColor, 1.0);
+}")
 
 (defun set-viewport (width height)
   (gl:viewport 0 0 width height)
@@ -37,16 +63,16 @@ void main()
   (gl:matrix-mode :modelview)
   (gl:load-identity))
 
-(defun my-compile-shader (type source)
+(defun compile-shader (type source)
   (let ((shader (gl:create-shader type)))
     (gl:shader-source shader source)
     (gl:compile-shader shader)
     shader))
 
-(defun my-create-shader (vs-src fs-src)
+(defun create-shader (vs-src fs-src)
   (let ((program (gl:create-program))
-	(vs (my-compile-shader :vertex-shader vs-src))
-	(fs (my-compile-shader :fragment-shader fs-src)))
+	(vs (compile-shader :vertex-shader vs-src))
+	(fs (compile-shader :fragment-shader fs-src)))
     (gl:attach-shader program vs)
     (gl:attach-shader program fs)
     (gl:link-program program)
@@ -73,48 +99,58 @@ void main()
       (gl:clear-color 0 0 0 0)
       (set-viewport 600 400)
 
-      (let* ((indicies  #(0.0 0.5 0.0 0.5 -0.5 0.0 -0.5 -0.5 0.0))
+      (let* ((verticies  #( 0.0  0.5 0.0  1.0 0.0 0.0
+			    0.5 -0.5 0.0  0.0 1.0 0.0
+			   -0.5 -0.5 0.0  0.0 0.0 1.0))
 	     (buffers (gl:gen-buffers 2))
 	     (vx-buffer (elt buffers 0))
 	     (color-buffer (elt buffers 1))
 	     (vx-array nil))
 
 	(gl:bind-buffer :array-buffer vx-buffer)
-	(let ((arr (gl:alloc-gl-array :float 9)))
-	  (dotimes (i (length indicies))
-	    (setf (gl:glaref arr i) (aref indicies i)))
+	(let ((arr (gl:alloc-gl-array :float 24)))
+	  (dotimes (i (length verticies))
+	    (setf (gl:glaref arr i) (aref verticies i)))
 	  (gl:buffer-data :array-buffer :static-draw arr)
 	  (gl:free-gl-array arr))
 
 	(gl:bind-buffer :array-buffer color-buffer)
-	(let ((arr (gl:alloc-gl-array :float 9)))
-	  (dotimes (i (length indicies))
-	    (setf (gl:glaref arr i) (aref indicies i)))
+	(let ((arr (gl:alloc-gl-array :float 24)))
+	  (dotimes (i (length verticies))
+	    (setf (gl:glaref arr i) (aref verticies i)))
 	  (gl:buffer-data :array-buffer :static-draw arr)
 	  (gl:free-gl-array arr))
 
 	(setf vx-array (gl:gen-vertex-array))
 	(gl:bind-vertex-array vx-array)
 	(gl:bind-buffer :array-buffer vx-buffer)
-	(gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
+	(gl:vertex-attrib-pointer 0 3 :float nil 24 (cffi:null-pointer))
 	(gl:bind-buffer :array-buffer color-buffer)
-	(gl:vertex-attrib-pointer 1 3 :float nil 0 (cffi:null-pointer))
+	(gl:vertex-attrib-pointer 1 3 :float nil 24 (cffi:inc-pointer (cffi:null-pointer) 12))
 	(gl:enable-vertex-attrib-array 0)
 	(gl:enable-vertex-attrib-array 1)
 
 	;; Create shaders
-	(let ((program (my-create-shader *vs-src* *fs-src*)))
-
+	(let* ((program (create-shader *vs-src* *fs-src*)))
 	  (loop until (window-should-close-p)
+		;; with loc = (gl:get-uniform-location program "myColor")
+		;; for tv = (glfw:get-time)
+		;; for green = (/ (sin tv) (+ 2.0 0.5))
+		;; for red = 1.0
+		;; for blue = 1.0
+
 		do (gl:with-pushed-matrix
-		     (gl:clear-color 0.07 0.13 0.17 1.0)
-		     (gl:clear :color-buffer-bit :depth-buffer-bit)
-		     (gl:use-program program)
-		     (gl:draw-arrays :triangles 0 3)
-		     (swap-buffers))
+		     (progn (gl:clear-color 0.07 0.13 0.17 1.0)
+			    (gl:clear :color-buffer-bit :depth-buffer-bit)
+			    (gl:use-program program)
+			    ;;(%gl:uniform-4f loc red green blue 1.0)
+			    (gl:draw-arrays :triangles 0 3)
+			    (swap-buffers)))
 		do (poll-events)))))))
 
 (main)
+
+
 
 
 
