@@ -15,12 +15,12 @@
 	    if (uiop:string-prefix-p "#shader" line) do
 	      (switch ((subseq line 8) :test #'equal)
 		("vertex" (setf type :vertex))
-		("fragment" (setf type :fragmenet)))
+		("fragment" (setf type :fragment)))
 	    else do
 	      (switch (type :test #'equal)
 		(:vertex (with-output-to-string (s vs-lines)
 			   (format s "~a~%" line)))
-		(:fragmenet (with-output-to-string (s fs-lines)
-			      (format s "~a~%" line))))
+		(:fragment (with-output-to-string (s fs-lines)
+			     (format s "~a~%" line))))
 	    finally (return (make-shader-src :vs vs-lines :fs fs-lines)))
       )))

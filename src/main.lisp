@@ -47,9 +47,9 @@
 	(gl:vertex-attrib-pointer 0 3 :float nil 12 (cffi:null-pointer))
 	(gl:enable-vertex-attrib-array 0)
 
-	(let* ((shader-src (load-shader "shader.glsl"))
-	       (shader (create-shader (shader-src-vs shader-src)
-				      (shader-src-fs shader-src))))
+	(let* ((src (load-shader "shader.glsl"))
+	       (shader (create-shader (shader-src-vs src)
+				      (shader-src-fs src))))
 	  
 	  (loop until (window-should-close-p)
 		do (gl:with-pushed-matrix
