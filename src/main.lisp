@@ -10,15 +10,6 @@
 
 (in-package :untitled)
 
-;; (defparameter *vs-src*
-;;   "#version 330
-;; layout (location = 0) in vec3 aPos;
-;; void main()
-;; {
-;;   gl_Position = vec4(aPos, 1.0);
-;; }
-;; ")
-
 (defparameter *vs-src*
   "#version 330 core
 layout (location = 0) in vec3 aPos;   // the position variable has attribute position 0
@@ -31,19 +22,6 @@ void main()
     gl_Position = vec4(aPos, 1.0);
     myColor = aColor; // set ourColor to the input color we got from the vertex data
 }")
-
-;; (defparameter *fs-src*
-;;   "#version 330
-
-;; out vec4 FragColor;
-;; uniform vec4 myColor;
-;; uniform vec3 iResolution;
-;; void main()
-;; {
-;;   FragColor = myColor;
-;; }
-
-;; ")
 
 (defparameter *fs-src*
   "#version 330 core
@@ -135,11 +113,10 @@ void main()
       (set-viewport 600 400)
 
       (let* ((verticies #( 0.0  0.5 0.0
-			  0.5 -0.5 0.0
+			   0.5 -0.5 0.0
 			  -0.5 -0.5 0.0 ))
 	     (vx-buffer (make-instance 'vx-buffer :data verticies :size 12))
 	     (ix-buffer (make-ix-buffer 3)))
-
 
 	;; TODO: vertex-array
 	(gl:vertex-attrib-pointer 0 3 :float nil 12 (cffi:null-pointer))
