@@ -51,7 +51,6 @@
 	       (shader (create-shader (shader-src-vs src)
 				      (shader-src-fs src))))
 
-	  (print src)
 	  (loop until (window-should-close-p)
 		do (gl:with-pushed-matrix
 		     (progn (gl:clear-color 0.07 0.13 0.17 1.0)
