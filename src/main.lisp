@@ -37,8 +37,8 @@
       (gl:clear-color 0 0 0 0)
       (set-viewport 600 400)
 
-      (let* ((verticies #( 0.0  0.5 0.0
-			   0.5 -0.5 0.0
+      (let* ((verticies #(0.0 0.5 0.0
+			  0.5 -0.5 0.0
 			  -0.5 -0.5 0.0 ))
 	     (vx-buffer (make-instance 'vx-buffer :data verticies :size 12))
 	     (ix-buffer (make-ix-buffer 3)))
@@ -50,7 +50,8 @@
 	(let* ((src (load-shader "shader.glsl"))
 	       (shader (create-shader (shader-src-vs src)
 				      (shader-src-fs src))))
-	  
+
+	  (print src)
 	  (loop until (window-should-close-p)
 		do (gl:with-pushed-matrix
 		     (progn (gl:clear-color 0.07 0.13 0.17 1.0)

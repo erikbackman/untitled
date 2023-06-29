@@ -1,23 +1,5 @@
 (in-package :untitled)
 
-(defun compile-shader (type source)
-  (let ((shader (gl:create-shader type)))
-    (gl:shader-source shader source)
-    (gl:compile-shader shader)
-    shader))
-
-(defun create-shader (vs-src fs-src)
-  (let ((program (gl:create-program))
-	(vs (compile-shader :vertex-shader vs-src))
-	(fs (compile-shader :fragment-shader fs-src)))
-    (gl:attach-shader program vs)
-    (gl:attach-shader program fs)
-    (gl:link-program program)
-    (gl:validate-program program)
-    (gl:delete-shader vs)
-    (gl:delete-shader fs)
-    program))
-
 (defclass vx-buffer () ((id :accessor id)))
 
 (defgeneric buffer-bind (obj))
