@@ -82,35 +82,39 @@ void main()
     program))
 
 (defclass vx-buffer () ((id :accessor id)))
-(defclass ix-buffer () ((id :accessor id)))
 
 (defgeneric buffer-bind (obj))
 (defgeneric buffer-unbind (obj))
 
-(defun alloc-gl-array (data size)
+(defun alloc-gl-array (data size target)
   (let ((arr (gl:alloc-gl-array :float size)))
     (dotimes (i (length data))
       (setf (gl:glaref arr i) (aref data i)))
-    (gl:buffer-data :array-buffer :static-draw arr)
+    (gl:buffer-data target :static-draw arr)
     (gl:free-gl-array arr)))
 
 (defmethod initialize-instance :after ((obj vx-buffer) &key data size)
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
-    (alloc-gl-array data size)))
+    (alloc-gl-array data size :array-buffer)))
 
-(defmethod initialize-instance :after ((obj ix-buffer) &key data count)
-  (with-slots (id) obj
-    (setf id (gl:gen-buffer))
-    (gl:bind-buffer :array-buffer id)
-    (alloc-gl-array data (* count (cffi:foreign-type-size :uint)))))
+(defun make-ix-buffer (count)
+  (let ((arr (gl:alloc-gl-array :uint count)))
+    (dotimes (i count)
+      (setf (gl:glaref arr i) i))
+    arr))
 
 (defmethod buffer-bind ((obj vx-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
 
 (defmethod buffer-unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
+
+(defun draw (va ib shader)
+  (buffer-bind va)
+  (gl:use-program shader)
+  (gl:draw-elements :triangles ib))
 
 (defun main ()
   (glfw:def-window-size-callback update-viewport (window w h)
@@ -130,31 +134,25 @@ void main()
       (gl:clear-color 0 0 0 0)
       (set-viewport 600 400)
 
-      (let* ((verticies  #( 0.0  0.5 0.0
-			    0.5 -0.5 0.0
-			   -0.5 -0.5 0.0))
-	     (vx-buffer (make-instance 'vx-buffer :data verticies :size 12)))
+      (let* ((verticies #( 0.0  0.5 0.0
+			  0.5 -0.5 0.0
+			  -0.5 -0.5 0.0 ))
+	     (vx-buffer (make-instance 'vx-buffer :data verticies :size 12))
+	     (ix-buffer (make-ix-buffer 3)))
 
-	(buffer-bind vx-buffer)
+
+	;; TODO: vertex-array
 	(gl:vertex-attrib-pointer 0 3 :float nil 12 (cffi:null-pointer))
 	(gl:enable-vertex-attrib-array 0)
 
-	(let* ((program (create-shader *vs-src* *fs-src*)))
+	(let* ((shader (create-shader *vs-src* *fs-src*)))
 	  (loop until (window-should-close-p)
 		do (gl:with-pushed-matrix
 		     (progn (gl:clear-color 0.07 0.13 0.17 1.0)
 			    (gl:clear :color-buffer-bit :depth-buffer-bit)
-			    (gl:use-program program)
-			    (gl:draw-arrays :triangles 0 3)
+			    (draw vx-buffer ix-buffer shader)
 			    (swap-buffers)))
 		do (poll-events))
-	  (gl:delete-program program))))))
+	  (gl:delete-program shader))))))
 
 (main)
-
-
-
-
-
-
-
