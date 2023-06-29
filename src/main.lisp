@@ -40,11 +40,11 @@
       (let* ((verticies #(0.0 0.5 0.0
 			  0.5 -0.5 0.0
 			  -0.5 -0.5 0.0 ))
-	     (vx-buffer (make-instance 'vx-buffer :data verticies :size 12))
+	     (vx-buffer (make-instance 'vx-buffer :data verticies :size (length verticies)))
 	     (ix-buffer (make-ix-buffer 3)))
 
 	;; TODO: vertex-array
-	(gl:vertex-attrib-pointer 0 3 :float nil 12 (cffi:null-pointer))
+	(gl:vertex-attrib-pointer 0 3 :float nil (* 3 (cffi:foreign-type-size :float)) (cffi:null-pointer))
 	(gl:enable-vertex-attrib-array 0)
 
 	(let* ((src (load-shader "shader.glsl"))
