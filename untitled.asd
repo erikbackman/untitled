@@ -5,7 +5,9 @@
   :depends-on ()
   :components ((:module "src"
                 :components
-                ((:file "main"))))
+                ((:file "main")
+		 (:file "render")
+		 (:file "shader"))))
   :description ""
   :in-order-to ((test-op (test-op "untitled/tests"))))
 
