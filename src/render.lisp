@@ -31,6 +31,8 @@
   (gl:bind-buffer :array-buffer 0))
 
 (defun draw (va ib shader)
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
+  (gl:program-uniformf shader (gl:get-uniform-location shader "u_Color") 0.5 0.0 0.5)
   (gl:draw-elements :triangles ib))

@@ -23,6 +23,7 @@
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'quit-on-escape)
        (set-window-size-callback 'update-viewport)
+       (glfw:swap-interval 1) ; vsync
        (gl:clear-color 0 0 0 0)
        (set-viewport 600 400)
        ,@body)))
@@ -46,7 +47,6 @@
       (gl:vertex-attrib-pointer 0 3 :float nil (* 3 (cffi:foreign-type-size :float)) (cffi:null-pointer))
       (gl:enable-vertex-attrib-array 0)
 
-      (gl:clear :color-buffer-bit :depth-buffer-bit)
       (loop until (window-should-close-p)
 	    do (draw vx-buffer ix-buffer shader)
 	       (swap-buffers)
