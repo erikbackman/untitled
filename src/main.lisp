@@ -8,7 +8,7 @@
   (gl:matrix-mode :modelview)
   (gl:load-identity))
 
-(defmacro with-window (() &body body)
+(defmacro with-window ((&key title width height) &body body)
   `(with-body-in-main-thread ()
      (def-window-size-callback update-viewport (window w h)
        (declare (ignore window))
@@ -19,17 +19,17 @@
        (when (and (eq key :escape) (eq action :press))
 	 (glfw:set-window-should-close)))
 
-     (with-init-window (:title "untitled" :width 600 :height 400)
+     (with-init-window (:title ,title :width ,width :height ,height)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'quit-on-escape)
        (set-window-size-callback 'update-viewport)
        (glfw:swap-interval 1) ; vsync
        (gl:clear-color 0 0 0 0)
-       (set-viewport 600 400)
+       (set-viewport ,width ,height)
        ,@body)))
 
 (defun main ()
-  (with-window ()
+  (with-window (:title "untitled" :width 600 :height 400)
     (let* ((verticies #( 0.5  0.5 0.0
 			 0.5 -0.5 0.0
 			-0.5 -0.5 0.0
