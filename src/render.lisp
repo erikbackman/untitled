@@ -34,6 +34,3 @@
   (buffer-bind va)
   (gl:use-program shader)
   (gl:draw-elements :triangles ib))
-
-
-

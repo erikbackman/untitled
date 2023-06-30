@@ -13,12 +13,12 @@
      (def-window-size-callback update-viewport (window w h)
        (declare (ignore window))
        (set-viewport w h))
-     
+
      (def-key-callback quit-on-escape (window key scancode action mod-keys)
        (declare (ignore window scancode mod-keys))
        (when (and (eq key :escape) (eq action :press))
 	 (glfw:set-window-should-close)))
-     
+
      (with-init-window (:title "untitled" :width 600 :height 400)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'quit-on-escape)
@@ -49,7 +49,7 @@
 	       (draw vx-buffer ix-buffer shader)
 	       (swap-buffers)
 	       (poll-events))
-      
+
       (gl:delete-program shader))))
 
 (main)
