@@ -18,10 +18,10 @@
     (gl:bind-buffer :array-buffer id)
     (alloc-gl-array data size :array-buffer)))
 
-(defun make-ix-buffer (count)
+(defun make-ix-buffer (data count)
   (let ((arr (gl:alloc-gl-array :uint count)))
     (dotimes (i count)
-      (setf (gl:glaref arr i) i))
+      (setf (gl:glaref arr i) (aref data i)))
     arr))
 
 (defmethod buffer-bind ((obj vx-buffer))

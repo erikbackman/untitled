@@ -29,11 +29,14 @@
 
 (defun main ()
   (with-window ()
-    (let* ((verticies #(0.0 0.5 0.0
-			0.5 -0.5 0.0
-			-0.5 -0.5 0.0))
+    (let* ((verticies #( 0.5  0.5 0.0
+			 0.5 -0.5 0.0
+			-0.5 -0.5 0.0
+			-0.5  0.5 0.0 ))
+	   (indicies #(0 1 2
+		       2 3 0))
 	   (vx-buffer (make-instance 'vx-buffer :data verticies :size (length verticies)))
-	   (ix-buffer (make-ix-buffer 3))
+	   (ix-buffer (make-ix-buffer indicies 6))
 	   (src (load-shader "shader.glsl"))
 	   (shader (create-shader
 		    (shader-src-vs src)
@@ -43,13 +46,12 @@
       (gl:vertex-attrib-pointer 0 3 :float nil (* 3 (cffi:foreign-type-size :float)) (cffi:null-pointer))
       (gl:enable-vertex-attrib-array 0)
 
+      (gl:clear :color-buffer-bit :depth-buffer-bit)
       (loop until (window-should-close-p)
-	    do (gl:clear-color 0.07 0.13 0.17 1.0)
-	       (gl:clear :color-buffer-bit :depth-buffer-bit)
-	       (draw vx-buffer ix-buffer shader)
+	    do (draw vx-buffer ix-buffer shader)
 	       (swap-buffers)
 	       (poll-events))
-
+      
       (gl:delete-program shader))))
 
 (main)
