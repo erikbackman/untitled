@@ -5,7 +5,7 @@
 (defun make-string-stream ()
   (make-array '(0) :element-type 'base-char :fill-pointer 0 :adjustable t))
 
-(defun compile-shader (type source)
+(defun my-compile-shader (type source)
   (let ((shader (gl:create-shader type)))
     (gl:shader-source shader source)
     (gl:compile-shader shader)
@@ -13,8 +13,8 @@
 
 (defun create-shader (vs-src fs-src)
   (let ((program (gl:create-program))
-	(vs (compile-shader :vertex-shader vs-src))
-	(fs (compile-shader :fragment-shader fs-src)))
+	(vs (my-compile-shader :vertex-shader vs-src))
+	(fs (my-compile-shader :fragment-shader fs-src)))
     (gl:attach-shader program vs)
     (gl:attach-shader program fs)
     (gl:link-program program)
