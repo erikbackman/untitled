@@ -8,6 +8,14 @@
   (gl:matrix-mode :modelview)
   (gl:load-identity))
 
+(defun init-gl ()
+  (gl:shade-model :smooth)
+  (gl:clear-color 0 0 0 0)
+  (gl:clear-depth 1.0)
+  (gl:enable :depth-test)
+  (gl:depth-func :lequal)
+  (gl:hint :perspective-correction-hint :nicest))
+
 (defmacro with-window ((&key title width height) &body body)
   `(with-body-in-main-thread ()
      (def-window-size-callback update-viewport (window w h)
@@ -23,25 +31,26 @@
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'quit-on-escape)
        (set-window-size-callback 'update-viewport)
-       (glfw:swap-interval 1) ; vsync
-       (gl:clear-color 0 0 0 0)
+       (glfw:swap-interval 1)		; vsync
+       (init-gl)
        (set-viewport ,width ,height)
        ,@body)))
 
+
 (defun main ()
   (with-window (:title "untitled" :width 600 :height 400)
-    (let* ((verticies #( 0.5  0.5 0.0
-			 0.5 -0.5 0.0
-			-0.5 -0.5 0.0
-			-0.5  0.5 0.0 ))
-	   (indicies #(0 1 2
-		       2 3 0))
-	   (vx-buffer (make-instance 'vx-buffer :data verticies :size (length verticies)))
-	   (ix-buffer (make-ix-buffer indicies 6))
-	   (src (load-shader "shader.glsl"))
-	   (shader (create-shader
-		    (shader-src-vs src)
-		    (shader-src-fs src))))
+    (let ((vx-buffer (make-instance 'vx-buffer
+				    :data #( 0.5  0.5 0.0
+					     0.5 -0.5 0.0
+					    -0.5 -0.5 0.0
+					    -0.5  0.5 0.0 )))
+	   
+	  (ix-buffer (make-ix-buffer #(0 1 2
+				       2 3 0)
+				     6))
+
+	  (shader (match (load-shader "shader.glsl")
+		    ((shader-src :vs vs :fs fs) (create-shader vs fs)))))
 
       ;; TODO: vertex-array abstraction
       (gl:vertex-attrib-pointer 0 3 :float nil (* 3 (cffi:foreign-type-size :float)) (cffi:null-pointer))

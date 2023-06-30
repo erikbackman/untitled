@@ -12,7 +12,7 @@
     (gl:buffer-data target :static-draw arr)
     (gl:free-gl-array arr)))
 
-(defmethod initialize-instance :after ((obj vx-buffer) &key data size)
+(defmethod initialize-instance :after ((obj vx-buffer) &key data (size (length data)))
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
