@@ -30,9 +30,31 @@
 (defmethod buffer-unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
 
+(defun print-shader-source ()
+  (print (gl:get-shader-source (elt (gl:get-attached-shaders shader) 0))))
+
+(defmacro set-uniformf (shader name x &optional y z w)
+  `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
+
+(defmacro with-frame-time ((fstart fend) &body body)
+  `(let ((,fstart 0.0)
+	 (,fend 0.0))
+     (progn
+       (setf ,fstart (glfw:get-time))
+       ,@body
+       (setf ,fend (- (glfw:get-time) fstart)))))
+
+(defparameter *red* 0.0)
+
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-  (gl:program-uniformf shader (gl:get-uniform-location shader "u_Color") 0.5 0.0 0.5)
+  (let ((trans (my-rotate (make-identity-matrixf 4)
+			  (glfw:get-time))))
+    (gl:uniform-matrix-4fv (gl:get-uniform-location shader "u_MVP") trans))
+  (if (> *red* 1.0)
+      (incf *red* -0.5)
+      (incf *red* 0.5))
+  (gl:uniformf (gl:get-uniform-location shader "u_Color") *red* 0.3 0.8)
   (gl:draw-elements :triangles ib))

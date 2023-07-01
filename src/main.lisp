@@ -57,9 +57,13 @@
       (gl:enable-vertex-attrib-array 0)
 
       (loop until (window-should-close-p)
-	    do (draw vx-buffer ix-buffer shader)
-	       (swap-buffers)
-	       (poll-events))
+	    do (with-frame-time (fstart fend)
+		 (draw vx-buffer ix-buffer shader)
+		 (swap-buffers)
+		 (poll-events)
+		 (let ((fdelay (/ 1.0 30.0)))
+		   (when (> fdelay fend) (sleep (- fdelay fend))))
+		 ))
       
       (gl:delete-program shader))))
 

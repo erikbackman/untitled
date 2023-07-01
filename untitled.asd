@@ -3,12 +3,14 @@
   :author ""
   :license ""
   :depends-on (:alexandria
+	       :trivia
 	       :cl-glfw3
 	       :cl-opengl
 	       :trivial-main-thread)
   :components ((:module "src"
                 :components
                 ((:file "package")
+		 (:file "math")
 		 (:file "render")
 		 (:file "shader")
 		 (:file "main"))))
