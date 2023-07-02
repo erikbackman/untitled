@@ -16,6 +16,8 @@
   (gl:depth-func :lequal)
   (gl:hint :perspective-correction-hint :nicest))
 
+(defparameter *zoom-value* 1.0)
+
 (defmacro with-window ((&key title width height) &body body)
   `(with-body-in-main-thread ()
      (def-window-size-callback update-viewport (window w h)
@@ -27,15 +29,23 @@
        (when (and (eq key :escape) (eq action :press))
 	 (glfw:set-window-should-close)))
 
+     (def-scroll-callback zoom-on-scroll (window x-offset y-offset)
+       (declare (ignore window x-offset))
+       (if (plusp y-offset) (incf *zoom-value* 0.1)
+	   (decf *zoom-value* 0.1)))
+
      (with-init-window (:title ,title :width ,width :height ,height)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'quit-on-escape)
+       (set-scroll-callback 'zoom-on-scroll)
        (set-window-size-callback 'update-viewport)
        (glfw:swap-interval 1)		; vsync
        (init-gl)
        (set-viewport ,width ,height)
        ,@body)))
 
+
+(defparameter *fdelay* (/ 1.0 60.0))
 
 (defun main ()
   (with-window (:title "untitled" :width 600 :height 400)
@@ -44,7 +54,7 @@
 					     0.5 -0.5 0.0
 					    -0.5 -0.5 0.0
 					    -0.5  0.5 0.0 )))
-	   
+
 	  (ix-buffer (make-ix-buffer #(0 1 2
 				       2 3 0)
 				     6))
@@ -61,10 +71,8 @@
 		 (draw vx-buffer ix-buffer shader)
 		 (swap-buffers)
 		 (poll-events)
-		 (let ((fdelay (/ 1.0 30.0)))
-		   (when (> fdelay fend) (sleep (- fdelay fend))))
-		 ))
-      
+		 (when (> *fdelay* fend) (sleep (- *fdelay* fend)))))
+
       (gl:delete-program shader))))
 
 (main)
