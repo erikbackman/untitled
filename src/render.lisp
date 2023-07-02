@@ -36,6 +36,9 @@
 (defmacro set-uniformf (shader name x &optional y z w)
   `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
 
+(defmacro set-uniform-matrix4f (shader name matrix)
+  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix))
+
 (defmacro with-frame-time ((fstart fend) &body body)
   `(let ((,fstart 0.0)
 	 (,fend 0.0))
@@ -44,12 +47,18 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
+(defparameter *identity-matrix4* (make-identity-matrixf 4))
+
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-  (let ((trans (tr-rotate (tr-translate (make-identity-matrixf 4) 0.5 -0.5 0.0)
-			  (glfw:get-time) 0.0 0.0 1.0)))
-    (gl:uniform-matrix-4fv (gl:get-uniform-location shader "u_MVP") trans))
-  (gl:uniformf (gl:get-uniform-location shader "u_Color") 0.5 0.0 0.5)
+  
+  (set-uniform-matrix4f shader "u_MVP"
+			(->> *identity-matrix4*
+			     (tr-scale *zoom-value* *zoom-value* 1.0)
+			     (tr-translate 0.0 0.0 0.0)
+			     (tr-rotate (* (glfw:get-time) pi) 0.0 0.0 1.0)))
+
+  (set-uniformf shader "u_Color" 0.5 0.0 0.5)
   (gl:draw-elements :triangles ib))
