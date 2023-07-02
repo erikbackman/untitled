@@ -44,17 +44,12 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
-(defparameter *red* 0.0)
-
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-  (let ((trans (my-rotate (make-identity-matrixf 4)
-			  (glfw:get-time))))
+  (let ((trans (tr-rotate (make-identity-matrixf 4)
+			  (glfw:get-time) 0.0 0.0 1.0)))
     (gl:uniform-matrix-4fv (gl:get-uniform-location shader "u_MVP") trans))
-  (if (> *red* 1.0)
-      (incf *red* -0.5)
-      (incf *red* 0.5))
-  (gl:uniformf (gl:get-uniform-location shader "u_Color") *red* 0.3 0.8)
+  (gl:uniformf (gl:get-uniform-location shader "u_Color") 0.5 0.0 0.5)
   (gl:draw-elements :triangles ib))

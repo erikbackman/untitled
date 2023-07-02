@@ -22,13 +22,18 @@
 	  (incf (aref m3 r c) (* (aref m1 r i) (aref m2 i c))))))
     m3))
 
-(defun tr-rotate (trans angle)
+(defun tr-rotate (trans angle x y z)
   (let ((mat (make-identity-matrixf 4))
 	(cosv (cos angle))
 	(sinv (sin angle)))
     (setf
-     (aref mat 0 0) cosv
-     (aref mat 0 1) (- sinv)
-     (aref mat 1 0) cosv
-     (aref mat 1 1) sinv)
+     (aref mat 0 0) (+ cosv (* (expt x 2) (- 1 cosv)))
+     (aref mat 0 1) (- (* x y (- 1 cosv)) (* z sinv))
+     (aref mat 0 2) (+ (* x z (- 1 cosv)) (* y sinv))
+     (aref mat 1 0) (- (* y x (- 1 cosv)) (* z sinv))
+     (aref mat 1 1) (+ cosv (* (expt y 2) (- 1 cosv)))
+     (aref mat 1 2) (- (* y z (- 1 cosv)) (* x sinv))
+     (aref mat 2 0) (- (* z x (- 1 cosv)) (* y sinv))
+     (aref mat 2 1) (+ (* z y (- 1 cosv)) (* x sinv))
+     (aref mat 2 2) (+ cosv (* (expt z 2) (- 1 cosv))))
     (matrix-mulf mat trans)))
