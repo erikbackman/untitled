@@ -48,7 +48,7 @@
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-  (let ((trans (tr-rotate (make-identity-matrixf 4)
+  (let ((trans (tr-rotate (tr-translate (make-identity-matrixf 4) 0.5 -0.5 0.0)
 			  (glfw:get-time) 0.0 0.0 1.0)))
     (gl:uniform-matrix-4fv (gl:get-uniform-location shader "u_MVP") trans))
   (gl:uniformf (gl:get-uniform-location shader "u_Color") 0.5 0.0 0.5)
