@@ -1,10 +1,17 @@
 (in-package :untitled)
 
+(defconstant +pi/6+ (/ pi 6))
+(defconstant +pi/4+ (/ pi 4))
+(defconstant +pi/3+ (/ pi 3))
+(defconstant +pi/2+ (/ pi 2))
+
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
     (dotimes (i n)
       (setf (aref m i i) 1.0))
     m))
+
+(defconstant +identity-matrix4+ (make-identity-matrixf 4))
 
 (defun dot (v1 v2)
   (loop for i from 0 below (array-dimension v1 0)

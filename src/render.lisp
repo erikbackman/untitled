@@ -30,7 +30,7 @@
 (defmethod buffer-unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
 
-(defun print-shader-source ()
+(defun print-shader-source (shader)
   (print (gl:get-shader-source (elt (gl:get-attached-shaders shader) 0))))
 
 (defmacro set-uniformf (shader name x &optional y z w)
@@ -47,18 +47,16 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
-(defparameter *identity-matrix4* (make-identity-matrixf 4))
-
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
   
   (set-uniform-matrix4f shader "u_MVP"
-			(->> *identity-matrix4*
+			(->> +identity-matrix4+
 			     (tr-scale *zoom-value* *zoom-value* 1.0)
 			     (tr-translate 0.0 0.0 0.0)
-			     (tr-rotate (* (glfw:get-time) pi) 0.0 0.0 1.0)))
+			     (tr-rotate (glfw:get-time) 0.0 0.0 1.0)))
 
   (set-uniformf shader "u_Color" 0.5 0.0 0.5)
   (gl:draw-elements :triangles ib))
