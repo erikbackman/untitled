@@ -11,6 +11,7 @@
                 :components
                 ((:file "package")
 		 (:file "math")
+		 (:file "function")
 		 (:file "render")
 		 (:file "shader")
 		 (:file "main"))))
