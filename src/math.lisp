@@ -17,6 +17,9 @@
       (0.0 0.0 1.0 0.0)
       (0.0 0.0 0.0 1.0)))
 
+(defun cotan (a)
+  (/ 1 (tan a)))
+
 (defun dot (v1 v2)
   (loop for i from 0 below (array-dimension v1 0)
 	sum (* (aref v1 i) (aref v2 i))))
@@ -76,15 +79,28 @@
      (aref tr 2 3) (- (/ (+ zfar znear) (- zfar znear))))
     tr))
 
+(defun tr-mat4-perspective (fovy aspect znear zfar)
+  (let ((tr (make-identity-matrixf 4))
+	(f (cotan (/ fovy 2))))
+    (setf
+     (aref tr 0 0) (/ 1 (* f aspect))
+     (aref tr 1 1) (/ 1 f)
+     (aref tr 2 2) (- (/ (+ zfar znear) (- zfar znear)))
+     (aref tr 2 3) -1.0
+     (aref tr 3 2) (- (/ (* 2 zfar znear) (- znear zfar))))
+    tr))
+
 (defun tr-scale (x y z matrix)
   (matrix-mulf (tr-mat4-scale x y z) matrix))
 
 (defun tr-translate (x y z matrix)
-  (matrix-mulf matrix (tr-mat4-translate x y z)))
+  (matrix-mulf (tr-mat4-translate x y z) matrix))
 
 (defun tr-rotate (angle x y z matrix)
-  (matrix-mulf matrix (tr-mat4-rotate angle x y z)))
+  (matrix-mulf (tr-mat4-rotate angle x y z) matrix))
 
 (defun tr-ortho (right left bottom top znear zfar matrix)
   (matrix-mulf (tr-mat4-ortho right left bottom top znear zfar) matrix))
 
+(defun tr-persp (fovy aspect znear zfar matrix)
+  (matrix-mulf (tr-mat4-perspective fovy aspect znear zfar) matrix))
