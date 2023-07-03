@@ -44,22 +44,26 @@
 
 (defun main ()
   (with-window (:title "untitled" :width 600 :height 400)
-    (let ((vx-buffer (make-instance 'vx-buffer
-				    :data #( 0.5  0.5 0.0
-					     0.5 -0.5 0.0
-					    -0.5 -0.5 0.0
-					    -0.5  0.5 0.0 )))
+    (let* ((shape (make-cube))
+	   (vx-buffer (make-instance 'vx-buffer
+				     :data (sd-verts shape)))
 
-	  (ix-buffer (make-ix-buffer #(0 1 2
-				       2 3 0)
-				     6))
+	   (ix-buffer (make-ix-buffer (sd-inds shape)))
 
-	  (shader (match (load-shader "shader.glsl")
-		    ((shader-src :vs vs :fs fs) (create-shader vs fs)))))
-
+	   (shader (match (load-shader "shader.glsl")
+		     ((shader-src :vs vs :fs fs) (create-shader vs fs)))))
+      
       ;; TODO: vertex-array abstraction
-      (gl:vertex-attrib-pointer 0 3 :float nil (* 3 (cffi:foreign-type-size :float)) (cffi:null-pointer))
-      (gl:enable-vertex-attrib-array 0)
+      (let ((stride (* 6 (cffi:foreign-type-size :float))))
+	(gl:enable-vertex-attrib-array 0)
+	(gl:vertex-attrib-pointer 0 3 :float nil stride (cffi:null-pointer))
+       
+	(gl:enable-vertex-attrib-array 1)
+	(gl:vertex-attrib-pointer 1 3 :float nil stride
+				  (cffi-sys:inc-pointer
+				   (cffi:null-pointer)
+				   (* 3 (cffi:foreign-type-size :float)))))
+      
 
       (loop until (window-should-close-p)
 	    do (draw vx-buffer ix-buffer shader)
