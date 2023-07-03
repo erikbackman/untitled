@@ -1,12 +1,7 @@
 (in-package :untitled)
 
 (defun set-viewport (width height)
-  (gl:viewport 0 0 width height)
-  (gl:matrix-mode :projection)
-  (gl:load-identity)
-  (gl:ortho -50 50 -50 50 -1 1)
-  (gl:matrix-mode :modelview)
-  (gl:load-identity))
+  (gl:viewport 0 0 width height))
 
 (defun init-gl ()
   (gl:shade-model :smooth)
@@ -67,11 +62,9 @@
       (gl:enable-vertex-attrib-array 0)
 
       (loop until (window-should-close-p)
-	    do (with-frame-time (fstart fend)
-		 (draw vx-buffer ix-buffer shader)
-		 (swap-buffers)
-		 (poll-events)
-		 (when (> *fdelay* fend) (sleep (- *fdelay* fend)))))
+	    do (draw vx-buffer ix-buffer shader)
+	       (swap-buffers)
+	       (poll-events))
 
       (gl:delete-program shader))))
 
