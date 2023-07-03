@@ -11,7 +11,11 @@
       (setf (aref m i i) 1.0))
     m))
 
-(defconstant +identity-matrix4+ (make-identity-matrixf 4))
+(defconstant +identity-matrix4+ 
+  #2A((1.0 0.0 0.0 0.0)
+      (0.0 1.0 0.0 0.0)
+      (0.0 0.0 1.0 0.0)
+      (0.0 0.0 0.0 1.0)))
 
 (defun dot (v1 v2)
   (loop for i from 0 below (array-dimension v1 0)
@@ -61,6 +65,17 @@
      (aref tr 2 3) z)
     tr))
 
+(defun tr-mat4-ortho (right left bottom top znear zfar)
+  (let ((tr (make-identity-matrixf 4)))
+    (setf
+     (aref tr 0 0) (/ 2 (- right left))
+     (aref tr 1 1) (/ 2 (- top bottom))
+     (aref tr 2 2) (/ -2 (- zfar znear))
+     (aref tr 0 3) (- (/ (+ right left) (- right left)))
+     (aref tr 1 3) (- (/ (+ top bottom) (- top bottom)))
+     (aref tr 2 3) (- (/ (+ zfar znear) (- zfar znear))))
+    tr))
+
 (defun tr-scale (x y z matrix)
   (matrix-mulf (tr-mat4-scale x y z) matrix))
 
@@ -70,6 +85,6 @@
 (defun tr-rotate (angle x y z matrix)
   (matrix-mulf matrix (tr-mat4-rotate angle x y z)))
 
-(defun tr-transform (matrix transformations)
-  (reduce 'funcall transformations :from-end t :initial-value matrix))
+(defun tr-ortho (right left bottom top znear zfar matrix)
+  (matrix-mulf (tr-mat4-ortho right left bottom top znear zfar) matrix))
 
