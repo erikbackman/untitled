@@ -11,7 +11,7 @@
       (setf (aref m i i) 1.0))
     m))
 
-(defconstant +identity-matrix4+ 
+(defparameter +identity-matrix4+ 
   #2A((1.0 0.0 0.0 0.0)
       (0.0 1.0 0.0 0.0)
       (0.0 0.0 1.0 0.0)
@@ -33,6 +33,13 @@
 	  (incf (aref m3 r c) (* (aref m1 r i) (aref m2 i c))))))
     m3))
 
+(defmacro def-transformation (name args &body matrix-form)
+  (let ((mat4f (read-from-string (format nil "tr-mat4-~a" name)))
+	(mat4mulf (read-from-string (format nil "tr-~a" name))))
+    `(progn (defun ,mat4f ,args ,@matrix-form)
+	    (defun ,mat4mulf (,@args matrix) 
+	      (matrix-mulf (,mat4f ,@args) matrix)))))
+
 (defun tr-mat4-scale (x y z)
   (let ((tr (make-identity-matrixf 4)))
     (setf
@@ -45,19 +52,22 @@
 ;; Rotate  = | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
 ;;           | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
 (defun tr-mat4-rotate (angle x y z)
-  (let ((tr (make-identity-matrixf 4))
-	(c (cos angle))
-	(s (sin angle)))
+  (let* ((tr (make-identity-matrixf 4))
+	 (c (cos angle))
+	 (s (sin angle))
+	 (1-c (- 1 c)))
     (setf
-     (aref tr 0 0) (+ (* x x (- 1 c)) c)
-     (aref tr 0 1) (- (* x y (- 1 c)) (* z s))
-     (aref tr 0 2) (+ (* x z (- 1 c)) (* y s))
-     (aref tr 1 0) (+ (* y x (- 1 c)) (* z s))
-     (aref tr 1 1) (+ (* y y (- 1 c)) c)
-     (aref tr 1 2) (- (* y z (- 1 c)) (* x s))
-     (aref tr 2 0) (- (* z x (- 1 c)) (* y s))
-     (aref tr 2 1) (+ (* z y (- 1 c)) (* x s))
-     (aref tr 2 2) (+ (* z z (- 1 c)) c))
+     (aref tr 0 0) (+ (* x x 1-c) c)
+     (aref tr 0 1) (- (* x y 1-c) (* z s))
+     (aref tr 0 2) (+ (* x z 1-c) (* y s))
+     
+     (aref tr 1 0) (+ (* y x 1-c) (* z s))
+     (aref tr 1 1) (+ (* y y 1-c) c)
+     (aref tr 1 2) (- (* y z 1-c) (* x s))
+     
+     (aref tr 2 0) (- (* z x 1-c) (* y s))
+     (aref tr 2 1) (+ (* z y 1-c) (* x s))
+     (aref tr 2 2) (+ (* z z 1-c) c))
     tr))
 
 (defun tr-mat4-translate (x y z)
