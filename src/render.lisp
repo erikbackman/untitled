@@ -18,7 +18,7 @@
     (gl:bind-buffer :array-buffer id)
     (alloc-gl-array data size :array-buffer)))
 
-(defun make-ix-buffer (data count)
+(defun make-ix-buffer (data &optional (count (length data)))
   (let ((arr (gl:alloc-gl-array :uint count)))
     (dotimes (i count)
       (setf (gl:glaref arr i) (aref data i)))
@@ -37,7 +37,7 @@
   `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
 
 (defmacro set-uniform-matrix4f (shader name matrix)
-  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix))
+  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix nil))
 
 (defmacro with-frame-time ((fstart fend) &body body)
   `(let ((,fstart 0.0)
@@ -47,16 +47,18 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
+(defun deg->rad (deg)
+  (* deg (/ pi 180)))
+
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-  
-  (set-uniform-matrix4f shader "u_MVP"
-			(->> +identity-matrix4+
-			     (tr-scale *zoom-value* *zoom-value* 1.0)
-			     (tr-translate 0.0 0.0 0.0)
-			     (tr-rotate (glfw:get-time) 0.0 0.0 1.0)))
 
-  (set-uniformf shader "u_Color" 0.5 0.0 0.5)
+  (let* ((view (tr-mat4-translate 0.0 0.0 0.0))
+	 (projection (tr-mat4-perspective (deg->rad 60.0) (/ 800 600) 0.1 100.0))
+	 (model (tr-mat4-rotate (deg->rad (* 10 *zoom-value*)) 1.0 0.0 0.0))
+	 (mvp (matrix* projection view model)))
+    (set-uniform-matrix4f shader "u_MVP" mvp))
+
   (gl:draw-elements :triangles ib))
