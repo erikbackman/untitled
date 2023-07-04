@@ -72,7 +72,7 @@
 	    -0.5 +0.5 +0.5 ;; 22 (left top near)
 	    ;; +1.0 +1.0 +1.0 ;; color
 	    -0.5 +0.5 -0.5 ;; 23 (left top far)
-
+	    ;; +1.0 +1.0 +1.0 ;; color
 	    )
    :vert-count 23
    :inds #(;; front
