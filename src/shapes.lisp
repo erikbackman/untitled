@@ -74,7 +74,7 @@
 	    -0.5 +0.5 -0.5 ;; 23 (left top far)
 
 	    )
-   :vert-count 11
+   :vert-count 23
    :inds #(;; front
 	   0 1 2     2 3 1
 	   ;; back
