@@ -55,10 +55,18 @@
   (buffer-bind va)
   (gl:use-program shader)
 
-  (let* ((view (tr-mat4-translate 0.0 0.0 0.0))
-	 (projection (tr-mat4-perspective (deg->rad 60.0) (/ 800 600) 0.1 100.0))
-	 (model (tr-mat4-rotate (deg->rad (* 10 *zoom-value*)) 1.0 0.0 0.0))
-	 (mvp (matrix* projection view model)))
-    (set-uniform-matrix4f shader "u_MVP" mvp))
+  (let ((rot-x (aref *rotation* 0))
+	(rot-y (aref *rotation* 1)))
+    (set-uniform-matrix4f
+     shader "u_MVP"
+     (matrix*
+      ;; Projection
+      (tr-mat4-perspective (deg->rad 60.0) +aspect+ *zoom* 100.0)
+      ;; View
+      (tr-mat4-translate 0.0 0.0 1.0)
+      ;; Model
+      (tr-mat4-rotate (deg->rad rot-x) 1.0 0.0 0.0)
+      (tr-mat4-rotate (deg->rad rot-y) 0.0 1.0 0.0)
+      (tr-mat4-rotate (deg->rad 10) 1.0 0.0 0.0))))
 
   (gl:draw-elements :triangles ib))
