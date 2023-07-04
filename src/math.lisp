@@ -4,6 +4,7 @@
 (defconstant +pi/4+ (/ pi 4))
 (defconstant +pi/3+ (/ pi 3))
 (defconstant +pi/2+ (/ pi 2))
+(defconstant +2pi+ (* 2 pi))
 
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
@@ -51,9 +52,9 @@
      (aref tr 2 2) z)
     tr))
 
-;;           | x*x*(1-c)+c      x*y*(1-c)-z*s    x*z*(1-c)+y*s |
-;; Rotate  = | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
-;;           | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
+;; | x*x*(1-c)+c      x*y*(1-c)-z*s    x*z*(1-c)+y*s |
+;; | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
+;; | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
 (defun tr-mat4-rotate (angle x y z)
   (let* ((tr (make-identity-matrixf 4))
 	 (c (cos angle))
