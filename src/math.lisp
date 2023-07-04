@@ -73,9 +73,9 @@
 (defun tr-mat4-translate (x y z)
   (let ((tr (make-identity-matrixf 4)))
     (setf
-     (aref tr 0 3) x
-     (aref tr 1 3) y
-     (aref tr 2 3) z)
+     (aref tr 0 3) (- x)
+     (aref tr 1 3) (- y)
+     (aref tr 2 3) (- z))
     tr))
 
 (defun tr-mat4-ortho (right left bottom top znear zfar)
