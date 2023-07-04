@@ -33,6 +33,9 @@
 	  (incf (aref m3 r c) (* (aref m1 r i) (aref m2 i c))))))
     m3))
 
+(defmacro matrix* (&rest mats)
+  (reduce (lambda (l r) `(matrix-mulf ,l ,r)) mats :from-end t))
+
 (defmacro def-transformation (name args &body matrix-form)
   (let ((mat4f (read-from-string (format nil "tr-mat4-~a" name)))
 	(mat4mulf (read-from-string (format nil "tr-~a" name))))
