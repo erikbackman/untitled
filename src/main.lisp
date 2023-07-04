@@ -1,6 +1,13 @@
 (in-package :untitled)
 
+(defparameter *win-w* 800)
+(defparameter *win-h* 600)
+(defparameter *aspect* (/ win-w win-h))
+
 (defun set-viewport (width height)
+  (setf *win-w* width
+	*win-h* height
+	*aspect* (/ width height))
   (gl:viewport 0 0 width height))
 
 (defun init-gl ()
@@ -14,25 +21,42 @@
   ;;(gl:hint :perspective-correction-hint :nicest)
   )
 
-(defmacro with-window ((&key title width height) &body body)
-  `(with-body-in-main-thread ()
-     (def-window-size-callback update-viewport (window w h)
-       (declare (ignore window))
-       (set-viewport w h))
+;; TODO: camera abstraction
+(defparameter *rotation* #(0.0 0.0))
+(defparameter *zoom* 0.0)
 
-     (def-key-callback quit-on-escape (window key scancode action mod-keys)
-       (declare (ignore window scancode mod-keys))
-       (when (and (eq key :escape) (eq action :press))
-	 (glfw:set-window-should-close)))
+(defun inc-rotation (dx dy)
+  (incf (aref *rotation* 0) (* 2 dx))
+  (incf (aref *rotation* 1) (* 2 dy)))
 
-     (def-scroll-callback zoom-on-scroll (window x-offset y-offset)
+(def-window-size-callback update-viewport (window w h)
+  (declare (ignore window))       
+  (set-viewport w h))
+
+(def-key-callback handle-key-input (window key scancode action mod-keys)
+  (declare (ignore window scancode mod-keys))
+  (when (and (eq action :press) (eq key :escape))
+    (glfw:set-window-should-close))
+  (when (or (eq action :press)
+	    (eq action :repeat))
+    (case key
+      (:s (inc-rotation -1 +0))
+      (:w (inc-rotation +1 +0))
+      (:a (inc-rotation +0 -1))
+      (:d (inc-rotation +0 +1))
+      (:q (incf *zoom* -0.01))
+      (:e (incf *zoom* +0.01)))))
+
+(def-scroll-callback zoom-on-scroll (window x-offset y-offset)
        (declare (ignore window x-offset))
-       (if (plusp y-offset) (incf *zoom-value* 0.1)
-	   (decf *zoom-value* 0.1)))
+       (if (plusp y-offset) (incf *zoom* 1)
+	   (decf *zoom* 1)))
 
+(defmacro with-window ((&key title width height) &body body)
+  `(with-body-in-main-thread ()     
      (with-init-window (:title ,title :width ,width :height ,height)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
-       (set-key-callback 'quit-on-escape)
+       (set-key-callback 'handle-key-input)
        (set-scroll-callback 'zoom-on-scroll)
        (set-window-size-callback 'update-viewport)
        (glfw:swap-interval 1)		; vsync
@@ -40,11 +64,10 @@
        (set-viewport ,width ,height)
        ,@body)))
 
-(defparameter *zoom-value* 1.0)
 (defparameter *fdelay* (/ 1.0 60.0))
 
 (defun main ()
-  (with-window (:title "untitled" :width 800 :height 600)
+  (with-window (:title "untitled" :width +win-w+ :height +win-h+)
     (let* ((shape (make-cube))
 	   (vx-buffer (make-instance 'vx-buffer
 				     :data (sd-verts shape)))
