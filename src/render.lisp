@@ -37,7 +37,7 @@
   `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
 
 (defmacro set-uniform-matrix4f (shader name matrix)
-  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix nil))
+  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix))
 
 (defmacro with-frame-time ((fstart fend) &body body)
   `(let ((,fstart 0.0)
