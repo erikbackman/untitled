@@ -63,8 +63,6 @@
       (tr-mat4-translate 0.0 0.0 1.0)
       ;; Model
       (tr-mat4-rotate (deg->rad rot-x) 1.0 0.0 0.0)
-      (tr-mat4-rotate (deg->rad rot-y) 0.0 1.0 0.0)
-      ;; (tr-mat4-rotate (deg->rad 10) 0.0 0.0 0.0)
-      )))
+      (tr-mat4-rotate (deg->rad rot-y) 0.0 1.0 0.0))))
 
   (gl:draw-elements :triangles ib))
