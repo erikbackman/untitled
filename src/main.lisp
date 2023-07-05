@@ -13,12 +13,12 @@
 (defun init-gl ()
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0)
-  ;;(gl:clear-depth 1.0)
+  (gl:clear-depth 1.0)
   (gl:matrix-mode :modelview)
   (gl:enable :depth-test)
-  (gl:polygon-mode :front-and-back :line)
+  ;; (gl:polygon-mode :front-and-back :line)
   (gl:depth-func :lequal)
-  ;;(gl:hint :perspective-correction-hint :nicest)
+  (gl:hint :perspective-correction-hint :nicest)
   )
 
 ;; TODO: camera abstraction
@@ -78,7 +78,7 @@
 		     ((shader-src :vs vs :fs fs) (create-shader vs fs)))))
 
       ;; TODO: vertex-array abstraction
-      (let ((stride (* 3 (cffi:foreign-type-size :float))))
+      (let ((stride (* 6 (cffi:foreign-type-size :float))))
 	(gl:enable-vertex-attrib-array 0)
 	(gl:vertex-attrib-pointer 0 3 :float nil stride (cffi:null-pointer))
 
