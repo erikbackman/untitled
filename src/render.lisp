@@ -47,9 +47,6 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
-(defun deg->rad (deg)
-  (* deg (/ pi 180)))
-
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
