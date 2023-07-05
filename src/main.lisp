@@ -2,7 +2,7 @@
 
 (defparameter *win-w* 800)
 (defparameter *win-h* 600)
-(defparameter *aspect* (/ win-w win-h))
+(defparameter *aspect* (/ *win-w* *win-h*))
 
 (defun set-viewport (width height)
   (setf *win-w* width
@@ -70,7 +70,7 @@
 (defparameter *fdelay* (/ 1.0 60.0))
 
 (defun main ()
-  (with-window (:title "untitled" :width +win-w+ :height +win-h+)
+  (with-window (:title "untitled" :width *win-w* :height *win-h*)
     (let* ((shape (make-cube))
 	   (vx-buffer (make-instance 'vx-buffer
 				     :data (sd-verts shape)))

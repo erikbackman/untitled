@@ -6,6 +6,9 @@
 (defconstant +pi/2+ (/ pi 2))
 (defconstant +2pi+ (* 2 pi))
 
+(defun deg->rad (deg)
+  (* deg (/ pi 180)))
+
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
     (dotimes (i n)
