@@ -16,6 +16,7 @@
   (gl:clear-depth 1.0)
   (gl:matrix-mode :modelview)
   (gl:enable :depth-test)
+  (gl:enable :multisample)
   ;; (gl:polygon-mode :front-and-back :line)
   (gl:depth-func :lequal)
   (gl:hint :perspective-correction-hint :nicest)
@@ -49,12 +50,14 @@
 
 (def-scroll-callback zoom-on-scroll (window x-offset y-offset)
        (declare (ignore window x-offset))
-       (if (plusp y-offset) (incf *zoom* 1)
-	   (decf *zoom* 1)))
+       (if (plusp y-offset) (incf *zoom* 0.01)
+	   (decf *zoom* 0.01)))
 
 (defmacro with-window ((&key title width height) &body body)
   `(with-body-in-main-thread ()     
-     (with-init-window (:title ,title :width ,width :height ,height)
+     (with-init-window (:title ,title
+			:width ,width :height ,height
+			:samples 4 :refresh-rate 60)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-key-callback 'handle-key-input)
        (set-scroll-callback 'zoom-on-scroll)
