@@ -21,6 +21,9 @@
       (0.0 0.0 1.0 0.0)
       (0.0 0.0 0.0 1.0)))
 
+(defun make-identity-matrixf-4f ()
+  (alexandria:copy-array +identity-matrix4+))
+
 (defun cotan (a)
   (/ 1 (tan a)))
 
@@ -106,18 +109,3 @@
      (aref tr 2 3) -1.0
      (aref tr 3 2) (- (/ (* 2 zfar znear) (- znear zfar))))
     tr))
-
-(defun tr-scale (x y z matrix)
-  (matrix-mulf (tr-mat4-scale x y z) matrix))
-
-(defun tr-translate (x y z matrix)
-  (matrix-mulf (tr-mat4-translate x y z) matrix))
-
-(defun tr-rotate (angle x y z matrix)
-  (matrix-mulf (tr-mat4-rotate angle x y z) matrix))
-
-(defun tr-ortho (right left bottom top znear zfar matrix)
-  (matrix-mulf (tr-mat4-ortho right left bottom top znear zfar) matrix))
-
-(defun tr-persp (fovy aspect znear zfar matrix)
-  (matrix-mulf (tr-mat4-perspective fovy aspect znear zfar) matrix))
