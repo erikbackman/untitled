@@ -16,8 +16,8 @@
 		 (:file "window")
 		 (:file "shapes")
 		 (:file "function")
-		 (:file "render")
 		 (:file "shader")
+		 (:file "render")
 		 (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "untitled/tests"))))
