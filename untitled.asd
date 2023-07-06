@@ -10,7 +10,10 @@
   :components ((:module "src"
                 :components
                 ((:file "package")
+		 (:file "array-utils")
 		 (:file "math")
+		 (:file "camera")
+		 (:file "window")
 		 (:file "shapes")
 		 (:file "function")
 		 (:file "render")
