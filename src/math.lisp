@@ -80,6 +80,9 @@
      (aref tr 2 2) (+ (* z z 1-c) c))
     tr))
 
+(defun tr-rotate (matrix angle x y z)
+  (matrix-mulf (tr-mat4-rotate angle x y z) matrix))
+
 (defun tr-mat4-translate (x y z)
   (let ((tr (make-identity-matrixf 4)))
     (setf
@@ -108,4 +111,85 @@
      (aref tr 2 2) (- (/ (+ zfar znear) (- zfar znear)))
      (aref tr 2 3) -1.0
      (aref tr 3 2) (- (/ (* 2 zfar znear) (- znear zfar))))
+    tr))
+
+(defun vec- (u v)
+  (let* ((dim (array-dimension u 0))
+	 (w (make-array dim)))
+    (dotimes (i dim)
+      (setf (aref w i) (- (aref u i) (aref v i))))
+    w))
+
+(defun vec+ (u v)
+  (let ((dim (array-dimension u 0)))
+    (let ((w (make-array dim)))
+      (dotimes (i dim)
+	(setf (aref w i) (+ (aref u i) (aref v i))))
+      w)))
+
+(defun vec-= (u v)
+  (dotimes (i 3)
+    (setf (aref u i) (- (aref u i) (aref v i)))))
+
+(let ((v #(1 2 3)))
+  (vec+= v #(1 1 3))
+  v)
+
+(defun vec+= (u v)
+  (dotimes (i 3)
+    (setf (aref u i) (+ (aref u i) (aref v i)))))
+
+(defun vec3* (n v)
+  (let ((w (make-array 3)))
+    (dotimes (i 3)
+      (setf (aref w i) (* n (aref v i))))
+    w))
+
+(defun vec3-incm (v &optional delta)
+  (dotimes (i 3)
+    (setf (aref v i) (+ (aref v i) (or delta 1)))))
+
+(defun vec-normalize (v)
+  (let* ((dim (array-dimension v 0))
+	 (mag (loop for i from 0 below dim
+		    for x = (aref v i)
+		    sum (* x x) into total
+		    finally (return (sqrt total)))))
+    (let ((w (make-array dim)))
+      (dotimes (i dim)
+	(setf (aref w i) (/ (aref v i) mag)))
+      w)))
+
+(defun vec-cross (u v)
+  (let ((w (make-array 3)))
+    (setf (aref w 0)
+	  (- (* (aref u 1) (aref v 2))
+	     (* (aref u 2) (aref v 1)))
+	  (aref w 1)
+	  (- (- (* (aref u 0) (aref v 2))
+		(* (aref u 2) (aref v 0))))
+	  (aref w 2)
+	  (- (* (aref u 0) (aref v 1))
+	     (* (aref u 1) (aref v 0))))
+    w))
+
+(defun tr-look-at (eye center up)
+  (let* ((f (vec-normalize (vec- eye center)))
+	 (l (vec-normalize (vec-cross up f)))
+	 (u (vec-cross f l))
+	 (tr (make-identity-matrixf 4)))
+    (setf
+     (aref tr 0 0) (!x l)
+     (aref tr 0 1) (!y l)
+     (aref tr 0 2) (!z l)
+     (aref tr 1 0) (!x u)
+     (aref tr 1 1) (!y u)
+     (aref tr 1 2) (!z u)
+     (aref tr 2 0) (!x f)
+     (aref tr 2 1) (!y f)
+     (aref tr 2 2) (!z f)
+     (aref tr 0 3) (- (dot l eye))
+     (aref tr 1 3) (- (dot u eye))
+     (aref tr 2 3) (- (dot f eye))
+     (aref tr 3 3) 1)
     tr))
