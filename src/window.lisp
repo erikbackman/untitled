@@ -10,19 +10,20 @@
 	*aspect* (/ width height))
   (gl:viewport 0 0 width height))
 
+(defun wireframe-mode () (gl:polygon-mode :front-and-back :line))
+
 (defun init-gl ()
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0)
   (gl:clear-depth 1.0)
   (gl:matrix-mode :modelview)
-  (gl:enable :multisample :depth-test :depth-clamp)
-  (gl:polygon-mode :front-and-back :line)
+  (gl:enable :multisample :depth-test)
+  (gl:cull-face :back)
+  (gl:front-face :cw)
+  (gl:depth-mask t)
   (gl:depth-func :lequal)
+  (gl:disable :cull-face) ;; disable for now
   (gl:hint :perspective-correction-hint :nicest))
-
-;; (defun inc-rotation (dx dy)
-;;   (incf (aref *rotation* 0) (* 2 dx))
-;;   (incf (aref *rotation* 1) (* 2 dy)))
 
 (defun update-camera (key cam)
   (let ((front (camera-front cam))
