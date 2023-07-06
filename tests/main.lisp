@@ -1,10 +1,13 @@
 (defpackage untitled/tests/main
   (:use :cl :rove)
-  (:import-from :untitled :matrix*))
+  (:import-from :untitled
+   :matrix*
+   :vec-cross
+   :dot))
 
 (in-package :untitled/tests/main)
 
-(deftest test-matrix*
+(deftest test_matrix*
   (testing "Should perform left matrix multiplication"
     (let* ((a #2A((0 0 1)
 		  (1 0 0)
@@ -17,3 +20,11 @@
 		  (1 2 3)
 		  (4 5 6))))
       (ok (equalp ab c)))))
+
+(deftest test_vec-cross
+  (testing "u x v should be orthogonal to u and v"
+    (let* ((u #(1 2 3))
+	   (v #(4 5 6))
+	   (w (vec-cross u v)))
+      (ok (and (zerop (dot u w))
+	       (zerop (dot v w)))))))
