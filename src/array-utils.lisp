@@ -5,14 +5,11 @@
 		 for v from 1 by 2
 		 append `((aref ,arr ,@(elt body i)) ,(elt body v)))))
 
-(defmacro !x (vec)
-  `(aref ,vec 0))
+(defun !x (vec) (aref vec 0))
 
-(defmacro !y (vec)
-  `(aref ,vec 1))
+(defun !y (vec) (aref vec 1))
 
-(defmacro !z (vec)
-  `(aref ,vec 2))
+(defun !z (vec) (aref vec 2))
 
 (defmacro with-elements ((x y z) vec &body body)
   (let ((a (gensym)))
