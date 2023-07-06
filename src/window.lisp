@@ -36,7 +36,9 @@
       (:d (vec+= pos (vec3* speed (vec-normalize (vec-cross front (camera-up cam)))))))))
 
 (def-window-size-callback update-viewport (window w h)
-  (declare (ignore window))       
+  (declare (ignore window))
+  (setf *win-w* w
+	*win-h* h)
   (set-viewport w h))
 
 (def-key-callback handle-key-input (window key scancode action mod-keys)
