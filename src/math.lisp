@@ -88,7 +88,8 @@
     (setf
      (aref tr 0 3) (- x)
      (aref tr 1 3) (- y)
-     (aref tr 2 3) (- z))
+     (aref tr 2 3) (- z)
+     (aref tr 3 3) (+ 1))
     tr))
 
 (defun tr-mat4-ortho (right left bottom top znear zfar)
@@ -102,15 +103,15 @@
      (aref tr 2 3) (- (/ (+ zfar znear) (- zfar znear))))
     tr))
 
-(defun tr-mat4-perspective (fovy aspect znear zfar)
+(defun mat4-perspective (angle ratio near far)
   (let ((tr (make-identity-matrixf 4))
-	(f (cotan (/ fovy 2))))
+	(tan-half-angle (tan (/ angle 2))))
     (setf
-     (aref tr 0 0) (/ 1 (* f aspect))
-     (aref tr 1 1) (/ 1 f)
-     (aref tr 2 2) (- (/ (+ zfar znear) (- zfar znear)))
-     (aref tr 2 3) -1.0
-     (aref tr 3 2) (- (/ (* 2 zfar znear) (- znear zfar))))
+     (aref tr 0 0) (/ 1 (* ratio tan-half-angle))
+     (aref tr 1 1) (/ 1 tan-half-angle)
+     (aref tr 2 2) (/ (- (+ far near) ) (- far near))
+     (aref tr 3 2) (- 1)
+     (aref tr 2 3) (/ (- (* 2 far near)) (- far near)))
     tr))
 
 (defun vec- (u v)
