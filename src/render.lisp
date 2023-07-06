@@ -48,7 +48,8 @@
     #( 1.3 -2.0 -2.5)
     #( 1.5  2.0 -2.5)
     #( 1.5  0.2 -1.5)
-    #(-1.3  1.0 -1.5)))
+    #(-1.3  1.0 -1.5)
+    ))
 
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -59,18 +60,19 @@
 	 (cam-front (camera-front *camera*))
 	 (cam-up (camera-up *camera*))
 	 (fov (camera-fov *camera*))
-	 (projection (tr-mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
+	 (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
 	 (view (tr-look-at cam-pos (vec+ cam-pos cam-front) cam-up)))
+    (shader-set-mat4 shader "u_view" view)
+    (shader-set-mat4 shader "u_proj" projection)
+
     (loop for pos across *cube-positions*
 	  for i by 1
 	  for angle = (* 20.0 i)
 	  for model = (matrix*
-		       (tr-mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
-		       (tr-mat4-translate (!x pos) (!y pos) (!z pos)))
+		       (mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
+		       (mat4-translate (!x pos) (!y pos) (!z pos)))
 	  do
-	     (shader-set-mat4
-	      shader "u_MVP"
-	      (matrix* projection view model))
+	     (shader-set-mat4 shader "u_model" (matrix* model))
 	     
 	     (gl:draw-elements :triangles ib)))
 

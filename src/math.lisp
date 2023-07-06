@@ -50,7 +50,7 @@
 	    (defun ,mat4mulf (,@args matrix) 
 	      (matrix-mulf (,mat4f ,@args) matrix)))))
 
-(defun tr-mat4-scale (x y z)
+(defun mat4-scale (x y z)
   (let ((tr (make-identity-matrixf 4)))
     (setf
      (aref tr 0 0) x
@@ -61,7 +61,7 @@
 ;; | x*x*(1-c)+c      x*y*(1-c)-z*s    x*z*(1-c)+y*s |
 ;; | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
 ;; | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
-(defun tr-mat4-rotate (angle x y z)
+(defun mat4-rotate (angle x y z)
   (let* ((tr (make-identity-matrixf 4))
 	 (c (cos angle))
 	 (s (sin angle))
@@ -81,9 +81,9 @@
     tr))
 
 (defun tr-rotate (matrix angle x y z)
-  (matrix-mulf (tr-mat4-rotate angle x y z) matrix))
+  (matrix-mulf (mat4-rotate angle x y z) matrix))
 
-(defun tr-mat4-translate (x y z)
+(defun mat4-translate (x y z)
   (let ((tr (make-identity-matrixf 4)))
     (setf
      (aref tr 0 3) (- x)
@@ -92,7 +92,7 @@
      (aref tr 3 3) (+ 1))
     tr))
 
-(defun tr-mat4-ortho (right left bottom top znear zfar)
+(defun mat4-ortho (right left bottom top znear zfar)
   (let ((tr (make-identity-matrixf 4)))
     (setf
      (aref tr 0 0) (/ 2 (- right left))
