@@ -47,22 +47,47 @@
        ,@body
        (setf ,fend (- (glfw:get-time) fstart)))))
 
+(defparameter *cube-positions*
+  #(#( 0.0  0.0  0.0)
+    #( 2.0  5.0 -15.0)
+    #(-1.5 -2.2 -2.5)
+    #(-3.8 -2.0 -12.3)
+    #( 2.4 -0.4 -3.5)
+    #(-1.7  3.0 -7.5)
+    #( 1.3 -2.0 -2.5)
+    #( 1.5  2.0 -2.5)
+    #( 1.5  0.2 -1.5)
+    #(-1.3  1.0 -1.5)))
+
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
 
-  (let ((rot-x (aref *rotation* 0))
-	(rot-y (aref *rotation* 1)))
-    (set-uniform-matrix4f
-     shader "u_MVP"
-     (matrix*
-      ;; Projection
-      (tr-mat4-perspective (deg->rad 60.0) *aspect* *zoom* 100.0)
-      ;; View
-      (tr-mat4-translate 0.0 0.0 1.0)
-      ;; Model
-      (tr-mat4-rotate (deg->rad rot-x) 1.0 0.0 0.0)
-      (tr-mat4-rotate (deg->rad rot-y) 0.0 1.0 0.0))))
+  (let* ((cam-pos (camera-pos *camera*))
+	 (cam-front (camera-front *camera*))
+	 (cam-up (camera-up *camera*))
+	 (fov (camera-fov *camera*))
+	 (projection (tr-mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
+	 (view (tr-look-at cam-pos (vec+ cam-pos cam-front) cam-up)))
+    (loop for pos across *cube-positions*
+	  for i by 1
+	  for angle = (* 20.0 i)
+	  for model = (matrix*
+		       (tr-mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
+		       (tr-mat4-translate (!x pos) (!y pos) (!z pos)))
+	  do
+	    (set-uniform-matrix4f
+	     shader "u_MVP"
+	     (matrix*
+	      ;; Projection
+	      projection
+	      ;; View
+	      view
+	      ;; Model
+	      model))
+	  (gl:draw-elements :triangles ib)))
 
-  (gl:draw-elements :triangles ib))
+;  (gl:draw-elements :triangles ib)
+  )
+
