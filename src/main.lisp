@@ -10,8 +10,8 @@
 
 	   (ix-buffer (make-ix-buffer (sd-inds shape)))
 
-	   (shader (match (load-shader "shader.glsl")
-		     ((shader-src :vs vs :fs fs) (create-shader vs fs)))))
+	   (shader (with-slots (vs fs) (load-shader "shader.glsl")
+		     (create-shader vs fs))))
 
       ;; TODO: vertex-array abstraction
       (let ((stride (* 6 (cffi:foreign-type-size :float))))
