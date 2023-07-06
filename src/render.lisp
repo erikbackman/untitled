@@ -30,15 +30,6 @@
 (defmethod buffer-unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
 
-(defun print-shader-source (shader)
-  (print (gl:get-shader-source (elt (gl:get-attached-shaders shader) 0))))
-
-(defmacro set-uniformf (shader name x &optional y z w)
-  `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
-
-(defmacro set-uniform-matrix4f (shader name matrix)
-  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix))
-
 (defmacro with-frame-time ((fstart fend) &body body)
   `(let ((,fstart 0.0)
 	 (,fend 0.0))
@@ -77,17 +68,12 @@
 		       (tr-mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
 		       (tr-mat4-translate (!x pos) (!y pos) (!z pos)))
 	  do
-	    (set-uniform-matrix4f
-	     shader "u_MVP"
-	     (matrix*
-	      ;; Projection
-	      projection
-	      ;; View
-	      view
-	      ;; Model
-	      model))
-	  (gl:draw-elements :triangles ib)))
+	     (shader-set-mat4
+	      shader "u_MVP"
+	      (matrix* projection view model))
+	     
+	     (gl:draw-elements :triangles ib)))
 
-;  (gl:draw-elements :triangles ib)
+  ;;(gl:draw-elements :triangles ib)
   )
 

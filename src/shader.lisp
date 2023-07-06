@@ -38,3 +38,9 @@
 	      (with-output-to-string (s (elt content type))
 		(format s "~a~%" line))
 	    finally (return (make-shader-src :vs (elt content 0) :fs (elt content 1)))))))
+
+(defmacro shader-set-float (shader name x &optional y z w)
+  `(gl:uniformf (funcall 'gl:get-uniform-location ,shader ,name) ,x ,y ,z ,w))
+
+(defmacro shader-set-mat4 (shader name matrix)
+  `(gl:uniform-matrix-4fv (gl:get-uniform-location ,shader ,name) ,matrix))
