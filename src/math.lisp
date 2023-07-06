@@ -131,10 +131,6 @@
   (dotimes (i 3)
     (setf (aref u i) (- (aref u i) (aref v i)))))
 
-(let ((v #(1 2 3)))
-  (vec+= v #(1 1 3))
-  v)
-
 (defun vec+= (u v)
   (dotimes (i 3)
     (setf (aref u i) (+ (aref u i) (aref v i)))))
