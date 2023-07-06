@@ -25,8 +25,8 @@
 (defsystem "untitled/tests"
   :author ""
   :license ""
-  :depends-on ("untitled"
-	       "rove")
+  :depends-on (:untitled
+	       :rove)
   :components ((:module "tests"
                 :components
                 ((:file "main"))))
