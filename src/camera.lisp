@@ -3,17 +3,41 @@
 (defparameter *camera* nil)
 
 (defstruct camera
-  pos
-  front
-  up
-  fov
-  speed)
+  position
+  front up right world-up
+  yaw pitch
+  speed sensitivity fov)
 
-(defun init-camera ()
+(defun init-camera
+    (&key
+       (position #(0.0 0.0 0.0))
+       (up #(0.0 1.0 0.0))
+       (yaw -90.0)
+       (pitch 0.0)
+       (fov 45)
+       (speed 0.09)
+       (sensitivity 0.1))
   (setf *camera*
 	(make-camera
-	 :pos #(0.0 0.0 0.5)
+	 :position position
 	 :front #(0.0 0.0 -1.0)
-	 :up #(0.0 1.0 0.0)
-	 :speed 0.09
-	 :fov 45)))
+	 :up up
+	 :yaw yaw
+	 :pitch pitch
+	 :fov fov
+	 :speed speed
+	 :sensitivity sensitivity)))
+
+(defun camera-view (camera)
+  (with-slots (position front up) camera
+      (tr-look-at position #(0 0 0) #(0 1 0))))
+
+(defmacro with-camera-position ((x y z) camera &body body)
+  (let ((cam (gensym)))
+    `(let* ((,cam ,camera))
+       (with-slots (position) ,cam
+	 (declare (sb-pcl::%variable-rebinding cam camera))
+	 (symbol-macrolet ((,x (aref position 0))
+			   (,y (aref position 1))
+			   (,z (aref position 2)))
+	   ,@body)))))

@@ -56,12 +56,13 @@
   (buffer-bind va)
   (gl:use-program shader)
 
-  (let* ((cam-pos (camera-pos *camera*))
-	 (cam-front (camera-front *camera*))
-	 (cam-up (camera-up *camera*))
-	 (fov (camera-fov *camera*))
+  (with-camera-position (x y z) *camera*
+    (setf x (* 10 (sin (glfw:get-time)))
+	  z (* 10 (cos (glfw:get-time)))))
+  
+  (let* ((fov (camera-fov *camera*))
 	 (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
-	 (view (tr-look-at cam-pos (vec+ cam-pos cam-front) cam-up)))
+	 (view (camera-view *camera*)))
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
 
@@ -74,8 +75,4 @@
 	  do
 	     (shader-set-mat4 shader "u_model" (matrix* model))
 	     
-	     (gl:draw-elements :triangles ib)))
-
-  ;;(gl:draw-elements :triangles ib)
-  )
-
+	     (gl:draw-elements :triangles ib))))
