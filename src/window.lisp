@@ -27,7 +27,7 @@
 
 (defun update-camera (key cam)
   (let ((front (camera-front cam))
-	(pos (camera-pos cam))
+	(pos (camera-position cam))
 	(speed (camera-speed cam)))
     (case key
       (:w (vec+= pos (vec3* speed front)))
