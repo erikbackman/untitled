@@ -21,6 +21,8 @@
       (0.0 0.0 1.0 0.0)
       (0.0 0.0 0.0 1.0)))
 
+(defparameter +zero-vector+ #(0.0 0.0 0.0))
+
 (defun make-identity-matrixf-4f ()
   (alexandria:copy-array +identity-matrix4+))
 
@@ -152,10 +154,11 @@
 		    for x = (aref v i)
 		    sum (* x x) into total
 		    finally (return (sqrt total)))))
-    (let ((w (make-array dim)))
-      (dotimes (i dim)
-	(setf (aref w i) (/ (aref v i) mag)))
-      w)))
+    (if (zerop mag) +zero-vector+ ;; TODO: dirty hack for now
+	(let ((w (make-array dim)))
+	  (dotimes (i dim)
+	    (setf (aref w i) (/ (aref v i) mag)))
+	  w))))
 
 (defun vec-cross (u v)
   (let ((w (make-array 3)))

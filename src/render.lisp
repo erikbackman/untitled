@@ -55,10 +55,6 @@
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (buffer-bind va)
   (gl:use-program shader)
-
-  (with-camera-position (x y z) *camera*
-    (setf x (* 10 (sin (glfw:get-time)))
-	  z (* 10 (cos (glfw:get-time)))))
   
   (let* ((fov (camera-fov *camera*))
 	 (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))

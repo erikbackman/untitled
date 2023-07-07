@@ -49,6 +49,27 @@
 	    (eq action :repeat))
     (update-camera key *camera*)))
 
+;; TODO: Clean this up
+(defparameter *last-y* 0)
+(defparameter *last-x* 0)
+(defparameter *first-mouse* t)
+
+(def-cursor-pos-callback handle-mouse-movement (window x y)
+  (declare (ignore window))
+
+  (when *first-mouse*
+    (setf *last-x* x
+	  *last-y* y
+	  *first-mouse* nil))
+  
+  (let ((xoffset (- x *last-x*))
+	(yoffset (- *last-y* y)))
+
+    (setf *last-x* x
+	  *last-y* y)
+    
+    (camera-handle-mouse-movement *camera* xoffset yoffset)))
+
 (defmacro with-window ((&key title width height) &body body)
   `(with-body-in-main-thread ()
      (with-init-window (:title ,title
@@ -56,6 +77,7 @@
 			:samples 4 :refresh-rate 60)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
        (set-window-size-callback 'update-viewport)
+       (set-cursor-position-callback 'handle-mouse-movement)
        (glfw:swap-interval 1)		; vsync
        (init-camera)
        (init-gl)
