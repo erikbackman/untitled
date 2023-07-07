@@ -71,7 +71,7 @@
 	  for angle = (* 20.0 i)
 	  for model = (matrix*
 		       (mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
-		       (mat4-translate (!x pos) (!y pos) (!z pos)))
+		       (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos)))
 	  do
 	     (shader-set-mat4 shader "u_model" (matrix* model))
 	     
