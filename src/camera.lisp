@@ -32,11 +32,15 @@
 
 (defun camera-view (camera)
   (with-slots (position front up) camera
-      (tr-look-at position (vec+ position front) up)))
+    (tr-look-at position (vec+ position front) up)))
 
 (defun camera-view-spinny (camera)
-  (with-slots (position front up) camera
-    (tr-look-at position #(0 0 0) #(0 1 0))))
+  (with-slots (position front up sensitivity) camera
+    (tr-look-at `#(,(* 10 (sin (glfw:get-time)))
+		   0.0
+		   ,(* 10 (cos (glfw:get-time))))
+		#(0 0 0)
+		#(0 1 0))))
 
 (defmacro with-camera-position ((x y z) camera &body body)
   (let ((cam (gensym)))
@@ -69,3 +73,11 @@
       (setf front new-front
 	    right new-right
 	    up new-up))))
+
+(defun camera-handle-keyboard (key cam)
+  (with-slots (front position speed up) cam
+    (case key
+      (:w (vec+= position (vec3* speed front)))
+      (:s (vec-= position (vec3* speed front)))
+      (:a (vec-= position (vec3* speed (vec-normalize (vec-cross front up)))))
+      (:d (vec+= position (vec3* speed (vec-normalize (vec-cross front up))))))))

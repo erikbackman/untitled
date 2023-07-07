@@ -25,16 +25,6 @@
   (gl:disable :cull-face) ;; disable for now
   (gl:hint :perspective-correction-hint :nicest))
 
-(defun update-camera (key cam)
-  (let ((front (camera-front cam))
-	(pos (camera-position cam))
-	(speed (camera-speed cam)))
-    (case key
-      (:w (vec+= pos (vec3* speed front)))
-      (:s (vec-= pos (vec3* speed front)))
-      (:a (vec-= pos (vec3* speed (vec-normalize (vec-cross front (camera-up cam))))))
-      (:d (vec+= pos (vec3* speed (vec-normalize (vec-cross front (camera-up cam)))))))))
-
 (def-window-size-callback update-viewport (window w h)
   (declare (ignore window))
   (setf *win-w* w
@@ -47,7 +37,7 @@
     (glfw:set-window-should-close))
   (when (or (eq action :press)
 	    (eq action :repeat))
-    (update-camera key *camera*)))
+    (camera-handle-keyboard key *camera*)))
 
 ;; TODO: Clean this up
 (defparameter *last-y* 0)
