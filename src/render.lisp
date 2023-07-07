@@ -69,6 +69,6 @@
 		       (mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
 		       (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos)))
 	  do
-	     (shader-set-mat4 shader "u_model" (matrix* model))
+	     (shader-set-mat4 shader "u_model" model)
 	     
 	     (gl:draw-elements :triangles ib))))
