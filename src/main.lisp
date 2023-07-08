@@ -8,17 +8,17 @@
 		:on-keyboard 'handle-key-input)
 
     (let* ((shape (make-cube))
-	   (vx-buffer (make-instance 'vx-buffer :data (sd-verts shape)))
-	   (ix-buffer (make-instance 'ix-buffer :data (sd-inds shape)))
+	   (vb (make-instance 'vertex-buffer :data (sd-verts shape)))
+	   (ib (make-instance 'index-buffer :data (sd-inds shape)))
 	   (va (make-instance 'vertex-array))
-	   (layout (make-vb-layout))
+	   (layout (make-vertex-buffer-layout))
 	   (shader (with-slots (vs fs) (load-shader "shader.glsl")
 		     (create-shader vs fs))))
 
-      (vb-layout-push layout 3)
-      (vertex-array-add-buffer va vx-buffer layout)
+      (vertex-buffer-layout-push layout 3)
+      (vertex-array-add-buffer va vb layout)
       (loop until (window-should-close-p)
-	    do (draw va ix-buffer shader)
+	    do (draw va ib shader)
 	       (swap-buffers)
 	       (let ((err (gl:check-error)))
 		 (when err

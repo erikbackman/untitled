@@ -12,29 +12,29 @@
 
 ;; ========  Vertex buffer ========
 
-(defclass vx-buffer ()
+(defclass vertex-buffer ()
   ((id :accessor id)))
 
-(defmethod initialize-instance :after ((obj vx-buffer) &key data (size (length data)))
+(defmethod initialize-instance :after ((obj vertex-buffer) &key data (size (length data)))
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
     (alloc-gl-array data size :array-buffer)))
 
-(defmethod bind ((obj vx-buffer))
+(defmethod bind ((obj vertex-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
 
-(defmethod unbind ((obj vx-buffer))
+(defmethod unbind ((obj vertex-buffer))
   (gl:bind-buffer :array-buffer 0))
 
 ;; ========  Index buffer ========
 
-(defclass ix-buffer ()
+(defclass index-buffer ()
   ((id :accessor id)
-   (cnt :accessor cnt :initform 0)))
+   (count :accessor index-count :initform 0)))
 
-(defmethod initialize-instance :after ((obj ix-buffer) &key data (count (length data)))
-  (with-slots (id cnt) obj
+(defmethod initialize-instance :after ((obj index-buffer) &key data (count (length data)))
+  (with-slots (id (cnt count)) obj
     (setf id (gl:gen-buffer)
 	  cnt count)
     (gl:bind-buffer :element-array-buffer id)
@@ -43,29 +43,29 @@
 	(setf (gl:glaref arr i) (aref data i))
 	(gl:buffer-data :element-array-buffer :static-draw arr)))))
 
-(defun make-ix-buffer (data &optional (count (length data)))
+(defun make-index-buffer (data &optional (count (length data)))
   (let ((arr (gl:alloc-gl-array :uint count)))
     (dotimes (i count)
       (setf (gl:glaref arr i) (aref data i)))
     arr))
 
-(defmethod bind ((obj ix-buffer))
+(defmethod bind ((obj index-buffer))
   (with-slots (id) obj (gl:bind-buffer :element-array-buffer id)))
 
-(defmethod unbind ((obj ix-buffer))
+(defmethod unbind ((obj index-buffer))
   (gl:bind-buffer :element-array-buffer 0))
 
 ;; ======== Vertex layout ========
 
-(defstruct vb-element type count normalized)
+(defstruct vertex-buffer-element type count normalized)
 
-(defstruct vb-layout
+(defstruct vertex-buffer-layout
   (elements (make-array '(0) :fill-pointer 0 :adjustable t))
   (stride 0))
 
-(defun vb-layout-push (layout count)
+(defun vertex-buffer-layout-push (layout count)
   (with-slots (elements stride) layout
-    (vector-push-extend (make-vb-element :type :float :count count :normalized nil) elements)
+    (vector-push-extend (make-vertex-buffer-element :type :float :count count :normalized nil) elements)
     (setf stride (* 6 (cffi:foreign-type-size :float)))))
 
 ;; ========  Vertex array ========
@@ -115,7 +115,7 @@
 
 (defun draw-triangles (ib)
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
-		    :count (slot-value ib 'cnt)))
+		    :count (slot-value ib 'count)))
 
 
 (defun draw (va ib shader)
@@ -142,7 +142,7 @@
 
 	       (draw-triangles ib))
 
-      (let ((ib (make-instance 'ix-buffer :data *prism-ix*)))
+      (let ((ib (make-instance 'index-buffer :data *prism-ix*)))
 	(shader-set-mat4 shader "u_model"
 			 (matrix* (mat4-rotate time 0.0 1.0 0.0)
 				  (mat4-translate 0 0 0)))
