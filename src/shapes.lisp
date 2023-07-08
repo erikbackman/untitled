@@ -2,6 +2,8 @@
 
 (defstruct (shape-data (:conc-name sd-)) verts inds vert-count)
 
+;; (concatenate '(vector int) v1 v2)
+
 (defun make-rect ()
   (make-shape-data
    :verts #(+0.5 +0.5 +0.0
@@ -81,6 +83,29 @@
 	    +0.0 +0.0 +0.7 ;; color
 	    -0.5 +0.5 -0.5 ;; 23 (left top far)
 	    +0.0 +0.0 +0.7 ;; color
+
+	    ;;; Rect
+	    +0.5 +0.5 +0.0 ;; 24
+	    +1.0 +0.0 +0.0 ;; color
+	    +0.5 -0.5 +0.0 ;; 25
+	    +1.0 +0.0 +0.0 ;; color
+	    -0.5 -0.5 +0.0 ;; 26
+	    +1.0 +0.0 +0.0 ;; color
+	    -0.5 +0.5 +0.0 ;; 27
+	    +1.0 +0.0 +0.0 ;; color
+
+	    ;;; Prism
+	    -0.5 -0.5 +0.5 ;; 28 (left near)
+	    +1.0 +1.0 +1.0 ;; color
+	    +0.5 -0.5 +0.5 ;; 29 (right near)
+	    +0.0 +0.0 +1.0 ;; color
+	    -0.5 -0.5 -0.5 ;; 30 (left far)
+	    +0.0 +0.0 +1.0 ;; color
+	    +0.5 -0.5 -0.5 ;; 31 (right far)
+	    +1.0 +1.0 +1.0 ;; color
+	    +0.0 +1.0 +0.0 ;; 32 top
+	    +1.0 +1.0 +1.0 ;; color
+	    +0.0 -1.5 +0.0 ;; 33 bot
 	    )
    :vert-count 23
    :inds #(;; front
@@ -96,6 +121,20 @@
 	   ;; left
 	   20 21 22  22 21 23
 	   )))
+
+(defparameter *prism-ix*
+  #(28 29 32	; side1
+    30 31 32	; side2
+    28 30 32	; side3
+    29 31 32	; side4
+    
+    28 29 33	; bot side1
+    30 31 33	; bot side2
+    28 30 33	; bot side3
+    29 31 33	; bot side4
+    ))
+
+(defparameter *rect-ix* #(24 25 26 26 27 24))
 
 #|================================================================================|# 
 #|                                    CYLINDER                                    |#

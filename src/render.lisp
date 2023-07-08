@@ -101,7 +101,7 @@
 ;; ======== Renderer ========
 
 (defparameter *cube-positions*
-  #(#( 0.0  0.0  0.0)
+  #(
     #( 2.0  5.0 -15.0)
     #(-1.5 -2.2 -2.5)
     #(-3.8 -2.0 -12.3)
@@ -112,6 +112,11 @@
     #( 1.5  0.2 -1.5)
     #(-1.3  1.0 -1.5)
     ))
+
+(defun draw-triangles (ib)
+  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
+		    :count (slot-value ib 'cnt)))
+
 
 (defun draw (va ib shader)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -126,15 +131,19 @@
     (bind va)
     (bind ib)
 
-    (shader-set-mat4 shader "u_model" (matrix* (mat4-translate 0.0 0.0 0.0)))
+    (let ((time (* 2 (glfw:get-time))))
+      (loop for pos across *cube-positions*
+	    for i by 1
+	    for angle = (* time i)
+	    do
+	       (shader-set-mat4 shader "u_model"
+				(matrix* (mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
+					 (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos))))
 
-    (loop for pos across *cube-positions*
-	  for i by 1
-	  for angle = (* 20.0 i)
-	  for model = (matrix*
-		       (mat4-rotate (deg->rad angle) 1.0 0.0 0.5)
-		       (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos)))
-	  do
-	     (shader-set-mat4 shader "u_model" model)
-	     (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int) :count (slot-value ib 'cnt)))
-    ))
+	       (draw-triangles ib))
+
+      (let ((ib (make-instance 'ix-buffer :data *prism-ix*)))
+	(shader-set-mat4 shader "u_model"
+			 (matrix* (mat4-rotate time 0.0 1.0 0.0)
+				  (mat4-translate 0 0 0)))
+	(draw-triangles ib)))))
