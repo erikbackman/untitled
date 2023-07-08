@@ -149,12 +149,12 @@
     (setf (aref v i) (+ (aref v i) (or delta 1)))))
 
 (defun vec-normalize (v)
-  (let* ((dim (array-dimension v 0))
-	 (mag (loop for i from 0 below dim
-		    for x = (aref v i)
-		    sum (* x x) into total
-		    finally (return (sqrt total)))))
-    (if (zerop mag) +zero-vector+ ;; TODO: dirty hack for now
+  (if (equalp v +zero-vector+) v ;; TODO: Probably don't wanna do this
+      (let* ((dim (array-dimension v 0))
+	     (mag (loop for i from 0 below dim
+			for x = (aref v i)
+			sum (* x x) into total
+			finally (return (sqrt total)))))
 	(let ((w (make-array dim)))
 	  (dotimes (i dim)
 	    (setf (aref w i) (/ (aref v i) mag)))

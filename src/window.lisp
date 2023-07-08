@@ -60,17 +60,19 @@
     
     (camera-handle-mouse-movement *camera* xoffset yoffset)))
 
-(defmacro with-window ((&key title width height) &body body)
+(defmacro with-window ((&key title width height on-keyboard on-mouse) &body body)
   `(with-body-in-main-thread ()
      (with-init-window (:title ,title
 			:width ,width :height ,height
 			:samples 4 :refresh-rate 60)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
+       
+       (when ,on-keyboard (set-key-callback ,on-keyboard))
+       (when ,on-mouse (set-cursor-position-callback ,on-mouse))
        (set-window-size-callback 'update-viewport)
-       (set-cursor-position-callback 'handle-mouse-movement)
+       
        (glfw:swap-interval 1)		; vsync
        (init-camera)
        (init-gl)
        (set-viewport ,width ,height)
-       (set-key-callback 'handle-key-input)
        ,@body)))

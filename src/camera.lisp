@@ -35,10 +35,10 @@
     (tr-look-at position (vec+ position front) up)))
 
 (defun camera-view-spinny (camera)
-  (with-slots (position front up sensitivity) camera
-    (tr-look-at `#(,(* 10 (sin (glfw:get-time)))
+  (with-slots (position front up sensitivity speed) camera
+    (tr-look-at `#(,(* 10 (sin (* speed (glfw:get-time))))
 		   0.0
-		   ,(* 10 (cos (glfw:get-time))))
+		   ,(* 10 (cos (* speed (glfw:get-time)))))
 		#(0 0 0)
 		#(0 1 0))))
 

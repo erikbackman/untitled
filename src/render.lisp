@@ -30,14 +30,6 @@
 (defmethod buffer-unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
 
-(defmacro with-frame-time ((fstart fend) &body body)
-  `(let ((,fstart 0.0)
-	 (,fend 0.0))
-     (progn
-       (setf ,fstart (glfw:get-time))
-       ,@body
-       (setf ,fend (- (glfw:get-time) fstart)))))
-
 (defparameter *cube-positions*
   #(#( 0.0  0.0  0.0)
     #( 2.0  5.0 -15.0)
@@ -61,7 +53,6 @@
 	 (view (camera-view *camera*)))
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
-
     (loop for pos across *cube-positions*
 	  for i by 1
 	  for angle = (* 20.0 i)
@@ -70,5 +61,4 @@
 		       (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos)))
 	  do
 	     (shader-set-mat4 shader "u_model" model)
-	     
 	     (gl:draw-elements :triangles ib))))
