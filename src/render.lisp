@@ -1,7 +1,7 @@
 (in-package :untitled)
 
-(defgeneric buffer-bind (obj))
-(defgeneric buffer-unbind (obj))
+(defgeneric bind (obj))
+(defgeneric unbind (obj))
 
 (defun alloc-gl-array (data size target)
   (let ((arr (gl:alloc-gl-array :float size)))
@@ -21,10 +21,10 @@
     (gl:bind-buffer :array-buffer id)
     (alloc-gl-array data size :array-buffer)))
 
-(defmethod buffer-bind ((obj vx-buffer))
+(defmethod bind ((obj vx-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
 
-(defmethod buffer-unbind ((obj vx-buffer))
+(defmethod unbind ((obj vx-buffer))
   (gl:bind-buffer :array-buffer 0))
 
 ;; ========  Index buffer ========
@@ -49,10 +49,10 @@
       (setf (gl:glaref arr i) (aref data i)))
     arr))
 
-(defmethod buffer-bind ((obj ix-buffer))
+(defmethod bind ((obj ix-buffer))
   (with-slots (id) obj (gl:bind-buffer :element-array-buffer id)))
 
-(defmethod buffer-unbind ((obj ix-buffer))
+(defmethod unbind ((obj ix-buffer))
   (gl:bind-buffer :element-array-buffer 0))
 
 ;; ======== Vertex layout ========
@@ -76,15 +76,15 @@
        :initform (gl:gen-vertex-array))
    (elements :initarg :elements :accessor elements :initform nil)))
 
-(defmethod buffer-bind ((obj vertex-array))
+(defmethod bind ((obj vertex-array))
   (with-slots (id) obj (gl:bind-vertex-array id)))
 
-(defmethod buffer-unbind ((obj vertex-array))
+(defmethod unbind ((obj vertex-array))
   (gl:bind-vertex-array 0))
 
 (defun vertex-array-add-buffer (va vb layout)
-  (buffer-bind va)
-  (buffer-bind vb)
+  (bind va)
+  (bind vb)
   (with-slots (elements stride) layout
     (loop for i from 0 below (length elements)
 	  for elem = (aref elements i)
@@ -123,8 +123,8 @@
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
 
-    (buffer-bind va)
-    (buffer-bind ib)
+    (bind va)
+    (bind ib)
 
     (shader-set-mat4 shader "u_model" (matrix* (mat4-translate 0.0 0.0 0.0)))
 
