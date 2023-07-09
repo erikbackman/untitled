@@ -148,6 +148,15 @@
   (dotimes (i 3)
     (setf (aref v i) (+ (aref v i) (or delta 1)))))
 
+(defun vec-magnitude (v)
+  (loop for i from 0 below (array-dimension v 0)
+	for x = (aref v i)
+	sum (* x x) into total
+	finally (return (sqrt total))))
+
+(defun distance (p1 p2)
+  (vec-magnitude (vec- p2 p1)))
+
 (defun vec-normalize (v)
   (if (equalp v +zero-vector+) v ;; TODO: Probably don't wanna do this
       (let* ((dim (array-dimension v 0))
