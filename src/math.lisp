@@ -182,7 +182,7 @@
 	     (* (aref u 1) (aref v 0))))
     w))
 
-(defun tr-look-at (eye center up)
+(defun mat4-look-at (eye center up)
   (let* ((f (vec-normalize (vec- eye center)))
 	 (l (vec-normalize (vec-cross up f)))
 	 (u (vec-cross f l))

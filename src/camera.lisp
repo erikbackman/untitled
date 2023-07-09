@@ -15,7 +15,7 @@
        (yaw -90.0)
        (pitch 0.1)
        (fov 45)
-       (speed 0.09)
+       (speed 0.2)
        (sensitivity 0.1))
   (setf *camera*
 	(make-camera
@@ -32,11 +32,11 @@
 
 (defun camera-view (camera)
   (with-slots (position front up) camera
-    (tr-look-at position (vec+ position front) up)))
+    (mat4-look-at position (vec+ position front) up)))
 
 (defun camera-view-spinny (camera)
   (with-slots (position front up sensitivity speed) camera
-    (tr-look-at `#(,(* 10 (sin (* speed (glfw:get-time))))
+    (mat4-look-at `#(,(* 10 (sin (* speed (glfw:get-time))))
 		   0.0
 		   ,(* 10 (cos (* speed (glfw:get-time)))))
 		#(0 0 0)
