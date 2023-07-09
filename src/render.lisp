@@ -90,7 +90,7 @@
 	  for elem = (aref elements i)
 	  do
 	     (gl:enable-vertex-attrib-array i)
-	     (gl:vertex-attrib-pointer 0 3 :float nil stride (cffi:null-pointer))
+	     (gl:vertex-attrib-pointer i 3 :float nil stride (cffi:null-pointer))
 
 	     (gl:enable-vertex-attrib-array (+ 1 i))
 	     (gl:vertex-attrib-pointer (+ 1 i) 3 :float nil stride
@@ -130,7 +130,7 @@
 
     (bind va)
     (bind ib)
-
+    
     (let ((time (* 2 (glfw:get-time))))
       (loop for pos across *cube-positions*
 	    for i by 1
@@ -141,7 +141,7 @@
 					 (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos))))
 
 	       (draw-triangles ib))
-
+                 
       (let ((ib (make-instance 'index-buffer :data *prism-ix*)))
 	(shader-set-mat4 shader "u_model"
 			 (matrix* (mat4-rotate time 0.0 1.0 0.0)
