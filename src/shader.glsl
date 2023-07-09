@@ -2,7 +2,7 @@
 #version 330 core
 
 layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 a_color;
+layout (location = 1) in vec4 a_color;
 
 uniform mat4 u_MVP;
 
@@ -10,7 +10,7 @@ uniform mat4 u_model;
 uniform mat4 u_proj;
 uniform mat4 u_view;
 
-out vec3 my_color;
+out vec4 my_color;
 
 void main()
 {
@@ -23,11 +23,10 @@ void main()
 #version 330 core
 
 out vec4 frag_color;
-in vec3 my_color;
-uniform vec3 u_Color;
+in vec4 my_color;
 
 void main()
 {
-    frag_color = vec4(my_color, 1.0);
+    frag_color = my_color;
     //frag_color = vec4(1.0, 1.0, 1.0, 1.0);
 }

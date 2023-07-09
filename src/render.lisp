@@ -66,7 +66,7 @@
 (defun vertex-buffer-layout-push (layout count)
   (with-slots (elements stride) layout
     (vector-push-extend (make-vertex-buffer-element :type :float :count count :normalized nil) elements)
-    (setf stride (* 6 (cffi:foreign-type-size :float)))))
+    (setf stride (* 7 (cffi:foreign-type-size :float)))))
 
 ;; ========  Vertex array ========
 
@@ -93,7 +93,7 @@
 	     (gl:vertex-attrib-pointer i 3 :float nil stride (cffi:null-pointer))
 
 	     (gl:enable-vertex-attrib-array (+ 1 i))
-	     (gl:vertex-attrib-pointer (+ 1 i) 3 :float nil stride
+	     (gl:vertex-attrib-pointer (+ 1 i) 4 :float nil stride
 				       (cffi-sys:inc-pointer
 					(cffi:null-pointer)
 					(* (slot-value elem 'count)
@@ -141,7 +141,14 @@
 					 (mat4-translate (vec-x pos) (vec-y pos) (vec-z pos))))
 
 	       (draw-triangles ib))
-                 
+
+      (let ((sf (+ 5 (distance #(0 0 0) (slot-value *camera* 'position))))
+	    (ib (make-instance 'index-buffer :data *rect-ix*)))
+	(shader-set-mat4 shader "u_model"
+			 (matrix* (mat4-rotate (deg->rad 90) 1.0 0.0 0.0)
+				  (mat4-scale sf sf sf)))
+	(draw-triangles ib))
+      
       (let ((ib (make-instance 'index-buffer :data *prism-ix*)))
 	(shader-set-mat4 shader "u_model"
 			 (matrix* (mat4-rotate time 0.0 1.0 0.0)
