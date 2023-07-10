@@ -74,15 +74,6 @@
       (:float3 3)
       (:float4 4))))
 
-(defun calculate-offset-and-stride (layout)
-  (let ((t-offset 0))
-    (with-slots (elements stride) layout
-      (loop for e in elements do
-	(with-slots (offset size) e
-	  (setf offset t-offset)
-	  (incf t-offset size)
-	  (incf stride size))))))
-
 (defun mk-buffer-layout (&rest attributes)
   "Attributes are of the form (:type (:base-type dimension) :name attribute-name.
 Example:
