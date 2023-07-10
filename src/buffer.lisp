@@ -83,10 +83,14 @@
 	  (incf t-offset size)
 	  (incf stride size))))))
 
-(defun mk-buffer-layout (&rest elements)
+(defun mk-buffer-layout (&rest attributes)
+  "Attributes are of the form (:type (:base-type dimension) :name attribute-name.
+Example:
+ (mk-buffer-layout '(:type (:float 3) :name \"a_position\")
+                   '(:type (:float 4) :name \"a_color\"))."
   (let ((stride 0)
 	(t-offset 0))
-    (loop for e in elements
+    (loop for e in attributes
 	  for (base-type count) = (getf e :type)
 	  for name = (getf e :name)
 	  for size = (shader-data-size base-type count)
