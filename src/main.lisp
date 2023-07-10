@@ -12,11 +12,8 @@
 	   (ib (make-instance 'index-buffer :data (sd-inds shape)))
 	   (va (make-instance 'vertex-array))
 	   
-	   (layout (make-instance
-		    'buffer-layout
-		    :elements
-		    `(,(make-buffer-element :float3 "a_position")
-		      ,(make-buffer-element :float4 "a_color"))))
+	   (layout (mk-buffer-layout '(:type (:float 3) :name "a_position")
+				     '(:type (:float 4) :name "a_color")))
 	   
 	   (shader (with-slots (vs fs) (load-shader "shader.glsl")
 		     (create-shader vs fs))))
