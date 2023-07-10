@@ -24,12 +24,12 @@
   (let* ((fov (camera-fov *camera*))
 	 (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
 	 (view (camera-view *camera*)))
-        
+
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
 
     (set-index-buffer va ib)
-    
+
     (let ((time (* 2 (glfw:get-time))))
       (loop for pos across *cube-positions*
 	    for i by 1
