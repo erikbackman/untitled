@@ -95,20 +95,6 @@
 	  do (incf stride size)
 	  finally (return `(:stride ,stride :elements ,result-elems)))))
 
-(defun add-vertex-buffer (va vb layout)
-  (bind va)
-  (bind vb)
-  (destructuring-bind (&key stride elements) layout
-    (loop for e in elements
-	  for i from 0 below (length elements)
-	  do (destructuring-bind (&key name count type offset) e
-	       (declare (ignore name))
-	       (assert (integerp offset))
-	       (gl:enable-vertex-attrib-array i)
-	       (gl:vertex-attrib-pointer i count type nil stride
-					 (cffi:inc-pointer (cffi:null-pointer) offset))))))
-
-
 #|================================================================================|# 
 #| Vertex Array                                                                   |# 
 #|================================================================================|# 
@@ -131,15 +117,15 @@
   (bind ib)
   (setf (slot-value va 'index-buffer) ib))
 
-;; (defun add-vertex-buffer (va vb layout)
-;;   (bind va)
-;;   (bind vb)
-;;   (with-slots (elements stride) layout
-;;       (loop for e in elements
-;; 	    for i from 0 below (length elements)
-;; 	    for cnt = (buffer-element-count e)
-;; 	    for off = (slot-value e 'offset)
-;; 	    do
-;; 	       (gl:enable-vertex-attrib-array i)
-;; 	       (gl:vertex-attrib-pointer
-;; 		i cnt :float nil stride (cffi-sys:inc-pointer (cffi:null-pointer) off)))))
+(defun add-vertex-buffer (va vb layout)
+  (bind va)
+  (bind vb)
+  (destructuring-bind (&key stride elements) layout
+    (loop for e in elements
+	  for i from 0
+	  do (destructuring-bind (&key name count type offset) e
+	       (declare (ignore name))
+	       (assert (integerp offset))
+	       (gl:enable-vertex-attrib-array i)
+	       (gl:vertex-attrib-pointer i count type nil stride
+					 (cffi:inc-pointer (cffi:null-pointer) offset))))))
