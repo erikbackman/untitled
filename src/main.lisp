@@ -11,12 +11,17 @@
 	   (vb (make-instance 'vertex-buffer :data (sd-verts shape)))
 	   (ib (make-instance 'index-buffer :data (sd-inds shape)))
 	   (va (make-instance 'vertex-array))
-	   (layout (make-vertex-buffer-layout))
+	   
+	   (layout (make-instance
+		    'buffer-layout
+		    :elements
+		    `(,(make-buffer-element :float3 "position")
+		      ,(make-buffer-element :float4 "a_color"))))
+	   
 	   (shader (with-slots (vs fs) (load-shader "shader.glsl")
 		     (create-shader vs fs))))
 
-      (vertex-buffer-layout-push layout 3)
-      (vertex-array-add-buffer va vb layout)
+      (add-vertex-buffer va vb layout)
       (loop until (window-should-close-p)
 	    do (draw va ib shader)
 	       (swap-buffers)

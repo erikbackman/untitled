@@ -14,9 +14,11 @@
 		 (:file "math")
 		 (:file "camera")
 		 (:file "window")
+		 (:file "scene")
 		 (:file "shapes")
 		 (:file "function")
 		 (:file "shader")
+		 (:file "buffer")
 		 (:file "render")
 		 (:file "main"))))
   :description ""

@@ -11,6 +11,8 @@
 
 (defun vec-z (vec) (aref vec 2))
 
+(defun vec-w (vec) (aref vec 3))
+
 (defun (setf vec-x) (value vec)
   (setf (aref vec 0) value))
 
