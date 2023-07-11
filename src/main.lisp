@@ -2,31 +2,19 @@
 
 (defparameter *fdelay* (/ 1.0 60.0))
 
-(defun main ()
-  (with-window (:title "untitled" :width *win-w* :height *win-h*
-		:on-mouse 'handle-mouse-movement
-		:on-keyboard 'handle-key-input)
+;; (defun main ()
+;;   (with-window (:title "untitled" :width *win-w* :height *win-h*
+;; 		:on-mouse 'handle-mouse-movement
+;; 		:on-keyboard 'handle-key-input)
+;;     (renderer-init)
+;;     (renderer-begin-scene)
+;;     (renderer-draw-quad *quad-verts* *green*)
+;;     (loop until (window-should-close-p)
+;; 	  do (renderer-flush)
+;; 	     (swap-buffers)
+;; 	     (poll-events))))
 
-    (let* ((shape (make-cube))
-	   (vb (make-instance 'vertex-buffer :data (sd-verts shape)))
-	   (ib (make-instance 'index-buffer :data (sd-inds shape)))
-	   (va (make-instance 'vertex-array))
-	   
-	   (layout (mk-buffer-layout '(:type (:float 3) :name "a_position")
-				     '(:type (:float 4) :name "a_color")))
-	   
-	   (shader (with-slots (vs fs) (load-shader "shader.glsl")
-		     (create-shader vs fs))))
+;;(main)
 
-      (add-vertex-buffer va vb layout)
-      (loop until (window-should-close-p)
-	    do (draw va ib shader)
-	       (swap-buffers)
-	       (let ((err (gl:check-error)))
-		 (when err
-		   (print (format nil "GL ERROR: ~a" err))))
-	       (poll-events))
+(run-demo)
 
-      (gl:delete-program shader))))
-
-(main)

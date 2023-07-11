@@ -16,13 +16,14 @@
 
 (defclass vertex-buffer ()
   ((id :accessor id)
-   (layout :accessor layout)))
+   (layout :accessor layout)
+   (data :accessor data :initform (make-array '(0) :fill-pointer 0 :adjustable t))))
 
 (defmethod initialize-instance :after ((obj vertex-buffer) &key data (size (length data)))
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
-    (alloc-gl-array data size :array-buffer)))
+    (when data (alloc-gl-array data size :array-buffer))))
 
 (defmethod bind ((obj vertex-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
@@ -33,6 +34,14 @@
 (defun set-layout (vertex-buffer layout)
   (setf (slot-value vertex-buffer 'layout) layout))
 
+(defun set-data (vertex-buffer data &key (offset 0))
+  (with-slots (id) vertex-buffer
+    (gl:bind-buffer :array-buffer id)
+    (let ((arr (gl:alloc-gl-array :float (length data))))
+      (dotimes (i (length data))
+	(setf (gl:glaref arr i) (aref data i)))
+      (gl:buffer-sub-data :array-buffer arr :offset offset)
+      (gl:free-gl-array arr))))
 
 #|================================================================================|# 
 #| Index Buffer                                                                   |# 
@@ -109,6 +118,9 @@ Example:
   (bind va)
   (bind ib)
   (setf (slot-value va 'index-buffer) ib))
+
+(defun get-index-buffer (va)
+  (slot-value va 'index-buffer))
 
 (defun add-vertex-buffer (va vb layout)
   (bind va)

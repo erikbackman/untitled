@@ -96,6 +96,15 @@
 
 (defparameter *rect-ix* #(24 25 26 26 27 24))
 
+(defun make-prism ()
+  (vector -0.5 -0.5 +0.5     +1.0 +1.0 +1.0 +1.0 ; 28 0
+	  +0.5 -0.5 +0.5     +0.0 +0.0 +1.0 +1.0 ; 29 1
+	  -0.5 -0.5 -0.5     +0.0 +0.0 +1.0 +1.0 ; 30 2
+	  +0.5 -0.5 -0.5     +1.0 +1.0 +1.0 +1.0 ; 31
+	  +0.0 +1.0 +0.0     +1.0 +1.0 +1.0 +1.0 ; 32
+	  +0.0 -1.5 +0.0     +1.0 +1.0 +1.0 +1.0 ; 33
+	  ))
+
 #|================================================================================|# 
 #|                                    CYLINDER                                    |#
 #|================================================================================|# 
@@ -111,30 +120,29 @@
 	     (vector-push-extend 0.0 circle-verticies))
     circle-verticies))
 
+(defun make-cylinder-verticies ()
+  (let* ((sector-count 3)
+	 (unit-verticies (make-unit-circle-verticies sector-count))
+	 (height 4)
+	 (radius 4)
+	 (verticies (make-array 3 :initial-element 0.0 :fill-pointer 0 :adjustable t)))
+    (loop for i from 0 below 2
+	  for h = (+ (/ (- height) 2) (* i height)) do
+	    ;; for t = (- 1.0 i) do
+	    (loop for j from 0 to sector-count
+		  for k from 0 by 3
+		  for ux = (aref unit-verticies k)
+		  for uy = (aref unit-verticies (+ k 1))
+		  for uz = (aref unit-verticies (+ k 2))
+		  do
+		     (vector-push-extend (* ux radius) verticies) ;; vx
+		     (vector-push-extend (* uy radius) verticies) ;; vy
+		     (vector-push-extend h verticies) ;; vz
 
-;; (defun make-cylinder-verticies ()
-;;   (let ((sector-count 3)
-;; 	(unit-verticies (make-unit-circle-verticies sector-count))
-;; 	(height 4)
-;; 	(radius 4)
-;; 	(verticies (make-array 3 :initial-element 0.0 :fill-pointer 0 :adjustable t)))
-;;     (loop for i from 0 below 2
-;; 	  for h = (+ (/ (-height) 2) (* i height))
-;; 	  for t = (- 1.0 i) do
-;; 	    (loop for j from 0 to sector-count
-;; 		  for k from 0 by 3
-;; 		  for ux = (aref unit-verticies k)
-;; 		  for uy = (aref unit-verticies (+ k 1))
-;; 		  for uz = (aref unit-verticies (+ k 2))
+		     (vector-push-extend ux verticies) ;; nx
+		     (vector-push-extend uy verticies) ;; ny
+		     (vector-push-extend uz verticies) ;; nz
+		  ))
+    verticies))
 
-;; 		  (vector-push-extend (* ux radius) verticies)
-;; 		  (vector-push-extend (* uy radius) verticies)
-;; 		  (vector-push-extend h verticies)
-
-;; 		  (vector-push-extend ux verticies)
-;; 		  (vector-push-extend uy verticies)
-;; 		  (vector-push-extend uz verticies)
-;; 		  ) 
-	  
-;; 	  )))
-
+(make-cylinder-verticies)

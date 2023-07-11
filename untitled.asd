@@ -14,12 +14,12 @@
 		 (:file "math")
 		 (:file "camera")
 		 (:file "window")
-		 (:file "scene")
 		 (:file "shapes")
 		 (:file "function")
 		 (:file "shader")
 		 (:file "buffer")
 		 (:file "render")
+		 (:file "demo")
 		 (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "untitled/tests"))))
