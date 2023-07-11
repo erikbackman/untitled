@@ -115,8 +115,8 @@ Example:
   (gl:bind-vertex-array 0))
 
 (defun set-index-buffer (va ib)
-  (bind va)
   (bind ib)
+  (bind va)
   (setf (slot-value va 'index-buffer) ib))
 
 (defun get-index-buffer (va)
