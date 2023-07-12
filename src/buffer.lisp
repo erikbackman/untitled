@@ -4,11 +4,23 @@
   (let ((arr (gl:alloc-gl-array :float size)))
     (dotimes (i (length data))
       (setf (gl:glaref arr i) (aref data i)))
-    (gl:buffer-data target :static-draw arr)
-    (gl:free-gl-array arr)))
+    (prog1
+	(gl:buffer-data target :static-draw arr)
+      (gl:free-gl-array arr))))
+
+(defun alloc-gl-array2 (data size target)
+  (alloc-gl-array (array2->array1 data) size target)
+  (let ((arr (gl:alloc-gl-array :float (array-total-size data))))
+    (destructuring-bind (n m) (array-dimensions data)
+      (loop for i from 0 below n do
+	(loop for j from 0 below m do
+	  (setf (gl:glaref arr (index2->index1 i j m)) (aref data i j))))
+      (prog1 (gl:buffer-data target :dynamic-draw arr)
+	(gl:free-gl-array arr)))))
 
 (defgeneric bind (obj))
 (defgeneric unbind (obj))
+(defgeneric set-data (obj &key data offset))
 
 #|================================================================================|# 
 #| Vertex Buffer                                                                  |# 
@@ -19,11 +31,13 @@
    (layout :accessor layout)
    (data :accessor data :initform (make-array '(0) :fill-pointer 0 :adjustable t))))
 
-(defmethod initialize-instance :after ((obj vertex-buffer) &key data (size (length data)))
+(defmethod initialize-instance :after ((obj vertex-buffer) &key data (size (array-total-size data)))
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
-    (when data (alloc-gl-array data size :array-buffer))))
+    (case (length (array-dimensions data))
+      (1 (alloc-gl-array data size :array-buffer))
+      (2 (alloc-gl-array2 data size :array-buffer)))))
 
 (defmethod bind ((obj vertex-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
@@ -34,13 +48,24 @@
 (defun set-layout (vertex-buffer layout)
   (setf (slot-value vertex-buffer 'layout) layout))
 
-(defun set-data (vertex-buffer data &key (offset 0))
-  (with-slots (id) vertex-buffer
+;; (defmethod set-data ((obj vertex-buffer) &key data (offset 0))
+;;   (with-slots (id) obj
+;;     (gl:bind-buffer :array-buffer id)
+;;     (let ((arr (gl:alloc-gl-array :float (length data))))
+;;       (dotimes (i (length data))
+;; 	(setf (gl:glaref arr i) (aref data i)))
+;;       (gl:buffer-sub-data :array-buffer arr :offset offset)
+;;       (gl:free-gl-array arr))))
+
+(defmethod set-data ((obj vertex-buffer) &key data (offset 0))
+  (with-slots (id) obj
     (gl:bind-buffer :array-buffer id)
-    (let ((arr (gl:alloc-gl-array :float (length data))))
-      (dotimes (i (length data))
-	(setf (gl:glaref arr i) (aref data i)))
-      (gl:buffer-sub-data :array-buffer arr :offset offset)
+    (let ((arr (gl:alloc-gl-array :float (array-total-size data))))
+      (destructuring-bind (n m) (array-dimensions data)
+	(loop for i from 0 below n do
+	  (loop for j from 0 below m do
+	    (setf (gl:glaref arr (index2->index1 i j m)) (aref data i j)))))
+      (gl:buffer-sub-data :array-buffer arr :buffer-offset offset)
       (gl:free-gl-array arr))))
 
 #|================================================================================|# 
