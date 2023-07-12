@@ -45,12 +45,12 @@
 (defun matrix* (&rest mats)
   (reduce #'matrix-mulf mats :from-end t))
 
-(defmacro def-transformation (name args &body matrix-form)
-  (let ((mat4f (read-from-string (format nil "tr-mat4-~a" name)))
-	(mat4mulf (read-from-string (format nil "tr-~a" name))))
-    `(progn (defun ,mat4f ,args ,@matrix-form)
-	    (defun ,mat4mulf (,@args matrix) 
-	      (matrix-mulf (,mat4f ,@args) matrix)))))
+(defun matrix*v (mat vec)
+  (let ((v (make-array '(4))))
+    (loop for i from 0 below 4 do
+      (loop for j from 0 below 4 do
+	(incf (aref v j) (* (aref mat j i) (aref vec i)))))
+    v))
 
 (defun mat4-scale (x y z)
   (let ((tr (make-identity-matrixf 4)))
