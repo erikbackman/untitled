@@ -1,8 +1,9 @@
 (in-package :untitled)
 
-(defstruct (shape-data (:conc-name sd-)) verts inds vert-count)
+;; THIS FILE IS A MESS ATM
+;;
 
-;; (concatenate '(vector int) v1 v2)
+(defstruct (shape-data (:conc-name sd-)) verts inds vert-count)
 
 (defun make-rect ()
   (make-shape-data
@@ -82,16 +83,27 @@
 	   20 21 22  22 21 23
 	   )))
 
+
+(defparameter *cube-ix*
+  #(
+    0 1 2     2 3 1    ;; front
+    4 5 6     6 7 5    ;; back
+    8 9 10    10 9 11  ;; top
+    12 13 14  14 13 15 ;; bottom
+    16 17 18  18 17 19 ;; right
+    20 21 22  22 21 23 ;; left
+    ))
+
 (defparameter *prism-ix*
-  #(28 29 32	; side1
-    30 31 32	; side2
-    28 30 32	; side3
-    29 31 32	; side4
-    
-    28 29 33	; bot side1
-    30 31 33	; bot side2
-    28 30 33	; bot side3
-    29 31 33	; bot side4
+  #(28 29 32 ;; side1
+    30 31 32 ;; side2
+    28 30 32 ;; side3
+    29 31 32 ;; side4
+
+    28 29 33 ;; bot side1
+    30 31 33 ;; bot side2
+    28 30 33 ;; bot side3
+    29 31 33 ;; bot side4
     ))
 
 (defparameter *rect-ix* #(24 25 26 26 27 24))
@@ -145,4 +157,3 @@
 		  ))
     verticies))
 
-(make-cylinder-verticies)
