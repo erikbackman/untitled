@@ -8,10 +8,7 @@
 		:on-keyboard 'handle-key-input)
     (renderer-init)
     (renderer-begin-scene)
-
     (render-basic-scene)
-    
-    ;; (renderer-draw-quad *red*)
     
     (loop until (window-should-close-p)
 	  do (renderer-flush)
