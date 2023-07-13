@@ -49,7 +49,11 @@
 				 (+0.5 +0.5 -0.5 1.0    +0.7 +0.0 +0.0 +1.0)))
 
 (defun renderer-init ()
-  (let ((vb (make-instance 'vertex-buffer :data *quad-verts-f* :size (* 4 8 4 4)))
+  (let ((vb (make-instance 'vertex-buffer
+			   :data *quad-verts-f*
+			   :size (* 4 8 4 4) ;; rows * cols * float-size * quad-count
+			   ))
+	
 	(ib (make-instance 'index-buffer :data #()))
 	(va (make-instance 'vertex-array))
 	(shader (with-slots (vs fs) (load-shader "quad-shader.glsl")
@@ -94,7 +98,7 @@
 ;; For testing
 (defun render-basic-scene ()
   (with-slots (quad-vertex-buffer quad-vertex-array offs) *renderer*
-    
+    ;; offset 128 as in 4(rows) * 8(cols) * 4(float-size)
     (set-data quad-vertex-buffer :data *quad-verts-b* :offset 128)
     (set-index-buffer quad-vertex-array
 		      (make-instance 'index-buffer :data #(0 1 2 2 3 1
