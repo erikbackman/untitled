@@ -12,7 +12,7 @@
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
-#|================================================================================|# 
+#|================================================================================|#
 
 ;; Work in progress, see demo.lisp for a working example.
 
@@ -37,6 +37,7 @@
 (defparameter *green* #(0.0 1.0 0.0 1.0))
 (defparameter *blue* #(0.0 0.0 1.0 1.0))
 
+;; Some vertices for testing 
 (defparameter *quad-verts-f* #2A((-0.5 -0.5 +0.5 1.0    +0.7 +0.0 +0.0 +1.0)
 				 (+0.5 -0.5 +0.5 1.0    +0.7 +0.0 +0.0 +1.0)
 				 (-0.5 +0.5 +0.5 1.0    +0.7 +0.0 +0.0 +1.0)
@@ -90,14 +91,15 @@
       (draw-triangles ib))))
 
 
+;; For testing
 (defun render-basic-scene ()
   (with-slots (quad-vertex-buffer quad-vertex-array offs) *renderer*
-    (set-data quad-vertex-buffer :data *quad-verts-f*)
-
-    (check-gl-error)
     
+    (set-data quad-vertex-buffer :data *quad-verts-b* :offset 128)
     (set-index-buffer quad-vertex-array
-		      (make-instance 'index-buffer :data #(0 1 2 2 3 1)))))
+		      (make-instance 'index-buffer :data #(0 1 2 2 3 1
+							   4 5 6 6 7 5)))
+    (check-gl-error)))
 
 
 
