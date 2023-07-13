@@ -9,8 +9,7 @@
       (gl:free-gl-array arr))))
 
 (defun alloc-gl-array2 (data size target)
-  (alloc-gl-array (array2->array1 data) size target)
-  (let ((arr (gl:alloc-gl-array :float (array-total-size data))))
+  (let ((arr (gl:alloc-gl-array :float size)))
     (destructuring-bind (n m) (array-dimensions data)
       (loop for i from 0 below n do
 	(loop for j from 0 below m do
