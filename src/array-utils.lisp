@@ -62,3 +62,6 @@ set to 0."
    (loop for i from 0 below rows
          collect (make-array max-columns
 			     :fill-pointer 0))))
+
+(defun vec4 (&optional (x 0) (y 0) (z 0) (w 1))
+  (make-array 4 :initial-contents `(,x ,y ,z ,w) :fill-pointer 4 :adjustable t))
