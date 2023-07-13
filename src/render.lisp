@@ -28,8 +28,9 @@
   (quad-vertex-positions)
   (quad-vertex-base)
   (quad-shader)
+  (quad-count)
+  (quad-max-count)
   (offs))
-
 
 (defparameter *quad-ix* #(0 1 2 2 3 0))
 
@@ -48,11 +49,33 @@
 				 (-0.5 +0.5 -0.5 1.0    +0.7 +0.0 +0.0 +1.0)
 				 (+0.5 +0.5 -0.5 1.0    +0.7 +0.0 +0.0 +1.0)))
 
+(defparameter *quad-verts-t* #2A((-0.5 +0.5 +0.5 1.0    +0.0 +0.7 +0.0 +1.0) 
+				 (+0.5 +0.5 +0.5 1.0    +0.0 +0.7 +0.0 +1.0)
+				 (-0.5 +0.5 -0.5 1.0    +0.0 +0.7 +0.0 +1.0)
+				 (+0.5 +0.5 -0.5 1.0    +0.0 +0.7 +0.0 +1.0)))
+
+(defparameter *quad-verts-bot* #2A((-0.5 -0.5 +0.5 1.0   +0.0 +0.7 +0.0 +1.0)
+				   (+0.5 -0.5 +0.5 1.0   +0.0 +0.7 +0.0 +1.0)
+				   (-0.5 -0.5 -0.5 1.0   +0.0 +0.7 +0.0 +1.0)
+				   (+0.5 -0.5 -0.5 1.0   +0.0 +0.7 +0.0 +1.0)))
+
+(defparameter *max-quads* 40)
+
+(defun size-of (type)
+  (case type
+    (:float 4)
+    (:vec3 12)
+    (:vec4 16)
+    (:mat4 64)))
+
+(defun calculate-offset (quad-count)
+  (if (= quad-count *max-quads*) 0
+      (* 4 8 (size-of :float) quad-count)))
+
 (defun renderer-init ()
   (let ((vb (make-instance 'vertex-buffer
-			   :data *quad-verts-f*
-			   :size (* 4 8 4 4) ;; rows * cols * float-size * quad-count
-			   ))
+			   :data #()
+			   :size (* 2 (size-of :mat4) *max-quads*)))
 	
 	(ib (make-instance 'index-buffer :data #()))
 	(va (make-instance 'vertex-array))
@@ -63,13 +86,15 @@
     (setf *renderer* (make-renderer
 		      :quad-vertex-array va
 		      :quad-vertex-buffer vb
-		      :quad-vertex-positions #((+0.5 +0.5 +0.0 1.0)
-					       (+0.5 -0.5 +0.0 1.0)
-					       (-0.5 -0.5 +0.0 1.0)
-					       (-0.5 +0.5 +0.0 1.0))
+		      :quad-vertex-positions `#(,(vec4 +0.5 +0.5 +0.0 1.0)
+						,(vec4 +0.5 -0.5 +0.0 1.0)
+						,(vec4 -0.5 -0.5 +0.0 1.0)
+						,(vec4 -0.5 +0.5 +0.0 1.0))
 		      :quad-vertex-base (make-array 6 :element-type 'quad-vertex
 						      :initial-element (make-quad-vertex))
 		      :quad-shader shader
+		      :quad-count 3
+		      :quad-max-count 40
 		      :offs (* 4 8 4)))
    
     (add-vertex-buffer va vb
@@ -97,12 +122,18 @@
 
 ;; For testing
 (defun render-basic-scene ()
-  (with-slots (quad-vertex-buffer quad-vertex-array offs) *renderer*
-    ;; offset 128 as in 4(rows) * 8(cols) * 4(float-size)
+  (with-slots (quad-vertex-buffer quad-vertex-array quad-count) *renderer*
+    ;; offset: nth-quad(0..n) * 4(rows) * 8(cols) * 4(float-size)
+    (set-data quad-vertex-buffer :data *quad-verts-f*)
     (set-data quad-vertex-buffer :data *quad-verts-b* :offset 128)
+    (set-data quad-vertex-buffer :data *quad-verts-t* :offset 256)
+    (set-data quad-vertex-buffer :data *quad-verts-bot* :offset 384)
+
     (set-index-buffer quad-vertex-array
-		      (make-instance 'index-buffer :data #(0 1 2 2 3 1
-							   4 5 6 6 7 5)))
+		      (make-instance 'index-buffer :data #( 0  1  2  2  3  1
+							    4  5  6  6  7  5
+							    8  9 10 10  9 11
+							   12 13 14 14 13 15)))
     (check-gl-error)))
 
 
@@ -129,9 +160,23 @@
     
     arr2))
 
-
 (defun renderer-draw-quad (color &optional quad)
   (with-slots (quad-vertex-buffer quad-vertex-array) *renderer*
     (set-data quad-vertex-buffer :data (quad-set-color (or quad *quad-verts-f*) color))
     (let ((ib (make-instance 'index-buffer :data *quad-ix*)))
       (set-index-buffer quad-vertex-array ib))))
+
+;; TODO
+;; Use 'base quad vertex positions' and translate every vertex `i' according to x y z
+;; and assign it to the `i'th vector in renderers current quad.
+(defun renderer-draw-quad-at (x y z &optional color)
+  (with-slots (quad-vertex-buffer quad-vertex-array quad-vertex-positions quad-count) *renderer*
+    (set-data quad-vertex-buffer
+	      :data (quad-set-color2
+		     color
+		     (loop for i from 0 to 3
+			   collect (matrix*v (mat4-translate x y z)
+					     (aref quad-vertex-positions i))))
+	      :offset (offset quad-count))))
+
+
