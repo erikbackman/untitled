@@ -19,7 +19,6 @@
 
 (defgeneric bind (obj))
 (defgeneric unbind (obj))
-(defgeneric set-data (obj &key data offset))
 
 #|================================================================================|# 
 #| Vertex Buffer                                                                  |# 
@@ -46,26 +45,6 @@
 
 (defun set-layout (vertex-buffer layout)
   (setf (slot-value vertex-buffer 'layout) layout))
-
-;; (defmethod set-data ((obj vertex-buffer) &key data (offset 0))
-;;   (with-slots (id) obj
-;;     (gl:bind-buffer :array-buffer id)
-;;     (let ((arr (gl:alloc-gl-array :float (length data))))
-;;       (dotimes (i (length data))
-;; 	(setf (gl:glaref arr i) (aref data i)))
-;;       (gl:buffer-sub-data :array-buffer arr :offset offset)
-;;       (gl:free-gl-array arr))))
-
-(defmethod set-data ((obj vertex-buffer) &key data (offset 0))
-  (with-slots (id) obj
-    (gl:bind-buffer :array-buffer id)
-    (let ((arr (gl:alloc-gl-array :float (array-total-size data))))
-      (destructuring-bind (n m) (array-dimensions data)
-	(loop for i from 0 below n do
-	  (loop for j from 0 below m do
-	    (setf (gl:glaref arr (index2->index1 i j m)) (aref data i j)))))
-      (gl:buffer-sub-data :array-buffer arr :buffer-offset offset)
-      (gl:free-gl-array arr))))
 
 #|================================================================================|# 
 #| Index Buffer                                                                   |# 
