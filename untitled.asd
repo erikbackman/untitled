@@ -1,7 +1,7 @@
 (defsystem "untitled"
   :version "0.1.0"
-  :author ""
-  :license ""
+  :author "Erik Bäckman"
+  :license "GPL-3"
   :depends-on (:alexandria
 	       :trivia
 	       :cl-glfw3
