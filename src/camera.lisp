@@ -80,4 +80,6 @@
       (:w (vec+= position (vec3* speed front)))
       (:s (vec-= position (vec3* speed front)))
       (:a (vec-= position (vec3* speed (vec-normalize (vec-cross front up)))))
-      (:d (vec+= position (vec3* speed (vec-normalize (vec-cross front up))))))))
+      (:d (vec+= position (vec3* speed (vec-normalize (vec-cross front up)))))
+      (:q (vec+= position (vec3* speed up)))
+      (:e (vec+= position (vec3* speed (vec3* -1 up)))))))

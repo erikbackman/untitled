@@ -30,3 +30,38 @@
 			 (,y (aref ,a 1))
 			 (,z (aref ,a 2)))
 	 ,@body))))
+
+(defun array2->array1 (arr)
+  (destructuring-bind (n m) (array-dimensions arr)
+    (let ((v (make-array (* n m))))
+      (loop for i from 0 below n do
+	(loop for j from 0 below m do
+	  (setf (aref v (+ (* i m) j)) (aref arr i j))))
+      v)))
+
+(defun index1->index2 (i ncols)
+  (list (floor (/ i ncols)) (mod i ncols)))
+
+(defun index2->index1 (row col ncols)
+  (+ (* row ncols) col))
+
+(defun array-slice (arr row)
+  (make-array (array-dimension arr 1)
+	      :adjustable t
+	      :fill-pointer 4
+	      :displaced-to arr
+	      :displaced-index-offset (* row (array-dimension arr 1))))
+
+(defun make-row-resizeable-array (rows max-columns)
+  "Returns an array of length ROWS containing arrays
+of length MAX-COLUMNS, but with a fill pointer initially
+set to 0."
+  (make-array
+   rows
+   :initial-contents
+   (loop for i from 0 below rows
+         collect (make-array max-columns
+			     :fill-pointer 0))))
+
+(defun vec4 (&optional (x 0) (y 0) (z 0) (w 1))
+  (make-array 4 :initial-contents `(,x ,y ,z ,w) :fill-pointer 4 :adjustable t))

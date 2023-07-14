@@ -4,48 +4,97 @@
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
 		    :count (slot-value ib 'count)))
 
+(defun check-gl-error ()
+  (let ((err (gl:get-error)))
+    (loop while (not (eq :zero err))
+	  do (print err)
+	     (setf err (gl:get-error)))))
+
 #|================================================================================|# 
 #| Renderer                                                                       |# 
-#|================================================================================|# 
+#|================================================================================|#
 
 ;; Work in progress, see demo.lisp for a working example.
 
 (defparameter *renderer* nil)
 
 (defstruct quad-vertex
-  (position #(0 0 0) :type (simple-vector 3))
+  (position #(0.0 0.0 0.0 1.0) :type (simple-vector 4))
   (color #(1.0 1.0 1.0 1.0) :type (simple-vector 4)))
+
+(defun quad-vertex-array? (array)
+  (every #'quad-vertex-p array))
+
+(defun make-quad (&optional color)
+  (let ((c (or color #(1.0 1.0 1.0 1.0))))
+    (vector (make-quad-vertex :position #(-0.5 -0.5 +0.5 1.0) :color c)
+	    (make-quad-vertex :position #(+0.5 -0.5 +0.5 1.0) :color c)
+	    (make-quad-vertex :position #(-0.5 +0.5 +0.5 1.0) :color c)
+	    (make-quad-vertex :position #(+0.5 +0.5 +0.5 1.0) :color c))))
 
 (defstruct renderer
   (quad-vertex-array)
   (quad-vertex-buffer)
   (quad-vertex-positions)
-  (quad-shader))
+  (quad-vertex-base)
+  (quad-shader)
+  (quad-count)
+  (quad-max-count)
+  (quad-vertex-buffer-offset))
 
-(defparameter *quad-verts* #(+0.5 +0.5 +0.0    +0.0 +0.8 +0.8 +0.3 ; 0
-			     +0.5 -0.5 +0.0    +0.0 +0.8 +0.8 +0.3 ; 1
-			     -0.5 -0.5 +0.0    +0.0 +0.8 +0.8 +0.3 ; 2 
-			     -0.5 +0.5 +0.0    +0.0 +0.8 +0.8 +0.3 ; 3
-			     ))
+(defparameter *quad-ix* #(0 1 2 2 3 0))
 
-(defparameter *red* #(0.0 0.0 1.0 1.0))
+(defparameter *white* #(1.0 1.0 1.0 1.0))
+(defparameter *red* #(1.0 0.0 0.0 1.0))
 (defparameter *green* #(0.0 1.0 0.0 1.0))
 (defparameter *blue* #(0.0 0.0 1.0 1.0))
 
+(defparameter *quad-vertex-default-position*
+  (vector #(-0.5 -0.5 +0.5 1.0)
+	  #(+0.5 -0.5 +0.5 1.0)
+	  #(-0.5 +0.5 +0.5 1.0)
+	  #(+0.5 +0.5 +0.5 1.0)))
+
+(defparameter *max-quads* 40)
+
+(defun size-of (type)
+  (case type
+    (:float 4)
+    (:vec3 12)
+    (:vec4 16)
+    (:mat4 64)))
+
+(defun calculate-offset (quad-count)
+  (if (= quad-count *max-quads*) 0
+      (* 4 8 (size-of :float) quad-count)))
+
 (defun renderer-init ()
-  (setf *renderer* (make-renderer
-		    :quad-vertex-array (make-instance 'vertex-array)
-		    :quad-vertex-buffer (make-instance 'vertex-buffer :data *quad-verts*)
-		    :quad-vertex-positions #()
-		    :quad-shader (with-slots (vs fs) (load-shader "shader.glsl")
-				   (create-shader vs fs))))
-  
-  (add-vertex-buffer (renderer-quad-vertex-array *renderer*)
-		     (renderer-quad-vertex-buffer *renderer*)
-		     (mk-buffer-layout '(:type (:float 3) :name "a_position")
-				       '(:type (:float 4) :name "a_color")))
-  (let ((quad-ib (make-instance 'index-buffer :data #(0 1 2 2 3 0))))
-    (set-index-buffer (renderer-quad-vertex-array *renderer*) quad-ib)))
+  (let ((vb (make-instance 'vertex-buffer
+			   :data #()
+			   :size (* 2 (size-of :mat4) *max-quads*)))
+	
+	(ib (make-instance 'index-buffer :data #()))
+	(va (make-instance 'vertex-array))
+	(shader (with-slots (vs fs) (load-shader "quad-shader.glsl")
+		  (create-shader vs fs))))
+
+    (set-index-buffer va ib)
+    (setf *renderer* (make-renderer
+		      :quad-vertex-array va
+		      :quad-vertex-buffer vb
+		      :quad-vertex-positions (vector #(-0.5 -0.5 +0.5 1.0)
+						     #(+0.5 -0.5 +0.5 1.0)
+						     #(-0.5 +0.5 +0.5 1.0)
+						     #(+0.5 +0.5 +0.5 1.0))
+		      :quad-vertex-base (make-quad)
+		      :quad-shader shader
+		      :quad-count 0
+		      :quad-max-count 40
+		      :quad-vertex-buffer-offset 0))
+   
+    (add-vertex-buffer va vb
+		       (mk-buffer-layout '(:type (:float 4) :name "a_position")
+					 '(:type (:float 4) :name "a_color")))))
 
 (defun renderer-begin-scene ()
   (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -65,15 +114,68 @@
       (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
       (draw-triangles ib))))
 
-(defun quad-set-color (arr color)
-  (let ((v (alexandria:copy-array arr))) 
-    (loop for r from 0 below 4 do
-      (loop for c from 3 below 7
-	    for i from 0 to 3 do
-	      (setf (aref v (+ (* r 7) c)) (aref color i))))
-    v))
+(defun vertex-array-size (array)
+  (* 8 (array-total-size array)))
 
-;; draw-quad (transform color)
-(defun renderer-draw-quad (position color)
-  (with-slots (quad-vertex-buffer) *renderer*
-    (set-data quad-vertex-buffer (quad-set-color position color))))
+;; Should probably make this take an upload function or make it a macro.
+(defun upload-data (buffer vertex-array)
+  "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
+(:position #(x y z w) :color (r g b a)).
+
+Return value: The amount of bytes written to the BUFFER."
+  (let* ((total-size (vertex-array-size vertex-array))
+	 (glarray (gl:alloc-gl-array :float total-size)))
+    (let ((offset (slot-value *renderer* 'quad-vertex-buffer-offset)) (gl-index 0))
+      (loop for vertex across vertex-array
+	    ;; Write the position data to the array
+	    do (loop for p across (quad-vertex-position vertex)
+		     do (setf (gl:glaref glarray gl-index) p)
+			;; (print (format nil "glarray[~a] = ~a" gl-index p))
+			(incf gl-index))
+	       ;; Followed by the color data
+	       (loop for c across (quad-vertex-color vertex)
+		     do (setf (gl:glaref glarray gl-index) c)
+			;; (print (format nil "glarray[~a] = ~a" gl-index c))
+			(incf gl-index))
+	       ;; Allocated 8 floats, so increment the offset by 8 * float-size
+	    do (incf offset (* 8 4)))
+      (bind buffer)
+      (gl:buffer-sub-data :array-buffer glarray :buffer-offset offset)
+      (gl:free-gl-array glarray)
+      (unbind buffer)
+      offset)))
+
+;; Instead of creating a new array every time, re-use the renderers current quad array.
+(defun make-quad-at (x y z &optional color)
+  (with-slots (quad-vertex-positions) *renderer*
+    (let ((result (make-array '(0) :element-type 'quad-vertex :fill-pointer 0 :adjustable t)))
+      (loop for vertex across *quad-vertex-default-position*
+	    do (vector-push-extend
+		(make-quad-vertex :position (matrix*v (mat4-translate x y z) vertex)
+				  :color (or color *white*))
+		result))
+      result)))
+
+(defun render-quad (&optional color)
+  (render-quad-at 0 0 0 color))
+
+(defun render-quad-at (x y z &optional color)
+  (with-slots (quad-vertex-buffer quad-vertex-buffer-offset) *renderer*
+    (let ((offset (upload-data quad-vertex-buffer (make-quad-at x y z color))))
+      (incf quad-vertex-buffer-offset offset))))
+
+#|================================================================================|#
+#| Test scene                                                                     |#
+#|================================================================================|#
+
+(defun render-basic-scene ()
+  (with-slots (quad-vertex-buffer quad-vertex-array quad-count) *renderer*
+    (render-quad *green*)
+    (render-quad-at 0 0 +0.5 *red*)
+    
+    (set-index-buffer quad-vertex-array
+		      (make-instance 'index-buffer :data #(0  1  2  2  3  1
+							   4  5  6  6  7  5
+							   8  9 10 10  9 11
+							   12 13 14 14 13 15)))
+    (check-gl-error)))
