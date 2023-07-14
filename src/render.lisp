@@ -125,7 +125,7 @@
 Return value: The amount of bytes written to the BUFFER."
   (let* ((total-size (vertex-array-size vertex-array))
 	 (glarray (gl:alloc-gl-array :float total-size)))
-    (let ((offset 0) (gl-index 0))
+    (let ((offset (slot-value *renderer* 'offs)) (gl-index 0))
       (loop for vertex across vertex-array
 	    ;; Write the position data to the array
 	    do (loop for p across (quad-vertex-position vertex)
@@ -140,7 +140,7 @@ Return value: The amount of bytes written to the BUFFER."
 	       ;; Allocated 8 floats, so increment the offset by 8 * float-size
 	    do (incf offset (* 8 4)))
       (bind buffer)
-      (gl:buffer-sub-data :array-buffer glarray)
+      (gl:buffer-sub-data :array-buffer glarray :buffer-offset offset)
       (gl:free-gl-array glarray)
       (unbind buffer)
       offset)))
@@ -157,12 +157,12 @@ Return value: The amount of bytes written to the BUFFER."
       result)))
 
 (defun render-quad (&optional color)
-  (with-slots (quad-vertex-buffer) *renderer*
-    (upload-data quad-vertex-buffer (make-quad color))))
+  (render-quad-at 0 0 0 color))
 
 (defun render-quad-at (x y z &optional color)
-  (with-slots (quad-vertex-buffer) *renderer*
-    (upload-data quad-vertex-buffer (make-quad-at x y z color))))
+  (with-slots (quad-vertex-buffer offs) *renderer*
+    (let ((offset (upload-data quad-vertex-buffer (make-quad-at x y z color))))
+      (incf offs offset))))
 
 #|================================================================================|#
 #| Test scene                                                                     |#
@@ -170,7 +170,8 @@ Return value: The amount of bytes written to the BUFFER."
 
 (defun render-basic-scene ()
   (with-slots (quad-vertex-buffer quad-vertex-array quad-count) *renderer*
-    (render-quad-at 0 0 0 *green*)
+    (render-quad *green*)
+    (render-quad-at 0 0 +0.5 *red*)
     
     (set-index-buffer quad-vertex-array
 		      (make-instance 'index-buffer :data #(0  1  2  2  3  1
