@@ -40,7 +40,7 @@
   (quad-shader)
   (quad-count)
   (quad-max-count)
-  (offs))
+  (quad-vertex-buffer-offset))
 
 (defparameter *quad-ix* #(0 1 2 2 3 0))
 
@@ -90,7 +90,7 @@
 		      :quad-shader shader
 		      :quad-count 0
 		      :quad-max-count 40
-		      :offs 0))
+		      :quad-vertex-buffer-offset 0))
    
     (add-vertex-buffer va vb
 		       (mk-buffer-layout '(:type (:float 4) :name "a_position")
@@ -125,7 +125,7 @@
 Return value: The amount of bytes written to the BUFFER."
   (let* ((total-size (vertex-array-size vertex-array))
 	 (glarray (gl:alloc-gl-array :float total-size)))
-    (let ((offset (slot-value *renderer* 'offs)) (gl-index 0))
+    (let ((offset (slot-value *renderer* 'quad-vertex-buffer-offset)) (gl-index 0))
       (loop for vertex across vertex-array
 	    ;; Write the position data to the array
 	    do (loop for p across (quad-vertex-position vertex)
@@ -160,9 +160,9 @@ Return value: The amount of bytes written to the BUFFER."
   (render-quad-at 0 0 0 color))
 
 (defun render-quad-at (x y z &optional color)
-  (with-slots (quad-vertex-buffer offs) *renderer*
+  (with-slots (quad-vertex-buffer quad-vertex-buffer-offset) *renderer*
     (let ((offset (upload-data quad-vertex-buffer (make-quad-at x y z color))))
-      (incf offs offset))))
+      (incf quad-vertex-buffer-offset offset))))
 
 #|================================================================================|#
 #| Test scene                                                                     |#
