@@ -13,14 +13,16 @@
 		 (:file "array-utils")
 		 (:file "math")
 		 (:file "camera")
-		 (:file "window")
 		 (:file "shapes")
 		 (:file "function")
 		 (:file "shader")
 		 (:file "buffer")
+		 (:file "window")
 		 (:file "render")
 		 (:file "demo")
 		 (:file "main"))))
+  :build-operation "program-op"
+  :entry-point "untitled::main"
   :description ""
   :in-order-to ((test-op (test-op "untitled/tests"))))
 

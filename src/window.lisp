@@ -17,11 +17,14 @@
   (gl:clear-color 0 0 0 0)
   (gl:clear-depth 1.0)
   (gl:matrix-mode :modelview)
+  (gl:enable :multisample :depth-test)
+
   (gl:blend-func :src-alpha :one-minus-src-alpha)
-  (gl:enable :multisample :depth-test :blend)
-  (gl:cull-face :back)
-  (gl:front-face :cw)
-  (gl:depth-mask t)
+  (gl:enable :blend)
+
+  ;;(gl:cull-face :back)
+  ;;(gl:front-face :cw)
+  ;;(gl:depth-mask t)
   (gl:depth-func :lequal)
   (gl:disable :cull-face) ;; disable for now
   (gl:hint :perspective-correction-hint :nicest))
@@ -67,12 +70,12 @@
 			:width ,width :height ,height
 			:samples 4 :refresh-rate 60)
        (setf %gl:*gl-get-proc-address* #'get-proc-address)
-       
+
        (when ,on-keyboard (set-key-callback ,on-keyboard))
        (when ,on-mouse (set-cursor-position-callback ,on-mouse))
        (set-window-size-callback 'update-viewport)
-       
-       (glfw:swap-interval 1)		; vsync
+     
+       ;;(glfw:swap-interval 1)		; vsync
        (init-camera)
        (init-gl)
        (set-viewport ,width ,height)
