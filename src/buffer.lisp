@@ -5,20 +5,12 @@
     (dotimes (i (length data))
       (setf (gl:glaref arr i) (aref data i)))
     (prog1
-	(gl:buffer-data target :static-draw arr)
+	(gl:buffer-data target :dynamic-draw arr)
       (gl:free-gl-array arr))))
-
-(defun alloc-gl-array2 (data size target)
-  (let ((arr (gl:alloc-gl-array :float size)))
-    (destructuring-bind (n m) (array-dimensions data)
-      (loop for i from 0 below n do
-	(loop for j from 0 below m do
-	  (setf (gl:glaref arr (index2->index1 i j m)) (aref data i j))))
-      (prog1 (gl:buffer-data target :dynamic-draw arr)
-	(gl:free-gl-array arr)))))
 
 (defgeneric bind (obj))
 (defgeneric unbind (obj))
+(defgeneric delete-buffer (obj))
 
 #|================================================================================|# 
 #| Vertex Buffer                                                                  |# 
@@ -33,9 +25,7 @@
   (with-slots (id) obj
     (setf id (gl:gen-buffer))
     (gl:bind-buffer :array-buffer id)
-    (case (length (array-dimensions data))
-      (1 (alloc-gl-array data size :array-buffer))
-      (2 (alloc-gl-array2 data size :array-buffer)))))
+    (alloc-gl-array data size :array-buffer)))
 
 (defmethod bind ((obj vertex-buffer))
   (with-slots (id) obj (gl:bind-buffer :array-buffer id)))
@@ -69,7 +59,6 @@
 
 (defmethod unbind ((obj index-buffer))
   (gl:bind-buffer :element-array-buffer 0))
-
 
 #|================================================================================|# 
 #| Vertex Layout                                                                  |# 
