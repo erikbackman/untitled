@@ -3,32 +3,19 @@
 (defparameter *camera* nil)
 
 (defstruct camera
-  position
-  front up right world-up
-  yaw pitch
-  speed sensitivity fov)
+  (position #(0.0 0.0 0.0) :type (simple-array float))
+  (front #(0.0 0.0 -1.0) :type (simple-array float))
+  (up #(0.0 1.0 0.0) :type (simple-array float))
+  (right #(0.0 0.0 0.0) :type (simple-array float))
+  (world-up #(0.0 1.0 0.0) :type (simple-array float))
+  (yaw -90.0 :type float)
+  (pitch 0.1 :type float)
+  (speed 0.2 :type float)
+  (sensitivity 0.1 :type float)
+  (fov 45.0 :type float))
 
-(defun init-camera
-    (&key
-       (position #(0.0 0.0 0.0))
-       (up #(0.0 1.0 0.0))
-       (yaw -90.0)
-       (pitch 0.1)
-       (fov 45)
-       (speed 0.2)
-       (sensitivity 0.1))
-  (setf *camera*
-	(make-camera
-	 :position position
-	 :front #(0.0 0.0 -1.0)
-	 :right #(0.0 0.0 0.0)
-	 :up up
-	 :world-up up
-	 :yaw yaw
-	 :pitch pitch
-	 :fov fov
-	 :speed speed
-	 :sensitivity sensitivity)))
+(defun init-camera ()
+  (setf *camera* (make-camera)))
 
 (defun camera-view (camera)
   (with-slots (position front up) camera
