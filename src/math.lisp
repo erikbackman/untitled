@@ -5,9 +5,10 @@
 (defconstant +pi/3+ (/ pi 3))
 (defconstant +pi/2+ (/ pi 2))
 (defconstant +2pi+ (* 2 pi))
+(defconstant +pi/180+ 0.017453)
 
 (defun deg->rad (deg)
-  (* deg (/ pi 180)))
+  (* deg +pi/180+))
 
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
@@ -42,8 +43,17 @@
 	  (incf (aref m3 r c) (* (aref m1 r i) (aref m2 i c))))))
     m3))
 
+(defun mat4-mult (m1 m2)
+  (declare (type (simple-array float (4 4)) m1 m2))
+  (let ((m3 (make-array '(4 4) :initial-element 0.0)))
+    (loop for i from 0 below 4 do
+      (loop for j from 0 below 4 do
+	(loop for k from 0 below 4 do
+	  (incf (aref m3 i j) (* (aref m1 i k) (aref m2 k j))))))
+    m3))
+
 (defun matrix* (&rest mats)
-  (reduce #'matrix-mulf mats :from-end t))
+  (reduce #'mat4-mult mats :from-end t))
 
 (defun matrix*v (mat vec)
   (let ((v (make-array '(4))))
@@ -64,6 +74,7 @@
 ;; | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
 ;; | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
 (defun mat4-rotate (angle x y z)
+  (declare (type single-float x y z angle))
   (let* ((tr (make-identity-matrixf 4))
 	 (c (cos angle))
 	 (s (sin angle))
@@ -86,6 +97,7 @@
   (matrix-mulf (mat4-rotate angle x y z) matrix))
 
 (defun mat4-translate (x y z)
+  (declare (type single-float x y z))
   (let ((tr (make-identity-matrixf 4)))
     (setf
      (aref tr 0 3) (- x)
@@ -183,6 +195,7 @@
     w))
 
 (defun mat4-look-at (eye center up)
+  (declare (type (simple-array float) eye center up))
   (let* ((f (vec-normalize (vec- eye center)))
 	 (l (vec-normalize (vec-cross up f)))
 	 (u (vec-cross f l))
