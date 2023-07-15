@@ -1,6 +1,6 @@
 (in-package :untitled)
 
-(defparameter *fdelay* (/ 1.0 60.0))
+(defparameter *fdelay* (/ 1000 60))
 
 (defparameter *positions*
   #(
@@ -19,23 +19,26 @@
     ))
 
 (defun main ()
-  (with-window (:title "untitled" :width *win-w* :height *win-h*
-		:on-mouse 'handle-mouse-movement
-		:on-keyboard 'handle-key-input)
-    (renderer-init)
-    (renderer-begin-scene)
-    (renderer-reset-stats)
+  (unwind-protect
+       (with-window (:title "untitled" :width *win-w* :height *win-h*
+		     :on-mouse 'handle-mouse-movement
+		     :on-keyboard 'handle-key-input)
+	 (renderer-init)
+	 (renderer-begin-scene)
+	 (renderer-reset-stats)
 
-    (begin-batch)
-    (loop for pos across *positions*
-	  do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *green*))
-    (loop for pos across *positions2*
-	  do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *red*))
-    (next-batch)
+	 (loop until (window-should-close-p)
+	       do
+		  (begin-batch)
+		  (loop for pos across *positions*
+			do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *green*))
+		  (loop for pos across *positions2*
+			do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *red*))
+		  (next-batch)
 
-    (loop until (window-should-close-p) do
-      (swap-buffers)
-      (poll-events))))
+		  (swap-buffers)
+		  (poll-events))
+	 (shutdown))))
 
 
 
