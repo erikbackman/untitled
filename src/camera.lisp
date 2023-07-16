@@ -19,7 +19,7 @@
 
 (defun camera-view (camera)
   (with-slots (position front up) camera
-    (mat4-look-at position (sb-cga:vec+ position front) up)))
+    (mat4-look-at position (cg:vec+ position front) up)))
 
 (defun camera-view-spinny (camera)
   (with-slots (position front up sensitivity speed) camera
@@ -39,6 +39,20 @@
 			   (,z (aref position 2)))
 	   ,@body)))))
 
+
+#|================================================================================|#
+#| Mouse movement                                                                 |#
+#|================================================================================|#
+
+(defun zero-vec? (v) (every #'zerop v))
+
+(defun norm (v)
+  (cg:normalize
+   (if (zero-vec? v)
+       (cg:vec+
+	(cg:vec single-float-epsilon single-float-epsilon single-float-epsilon) v)
+       v)))
+
 (declaim (ftype (function (single-float single-float) vec)))
 (defun camera-calculate-front (pitch yaw)
   (let* ((yaw-rad (deg->rad yaw))
@@ -47,17 +61,7 @@
 	 (x (* (cos yaw-rad) cos-pitch))
 	 (y (sin pitch-rad))
 	 (z (* (sin yaw-rad) (cos pitch-rad))))
-    (sb-cga:normalize (vec x y z))))
-
-
-(defun zero-vec? (v) (every #'zerop v))
-
-(defun norm (v)
-  (sb-cga:normalize
-   (if (zero-vec? v)
-       (sb-cga:vec+
-	(sb-cga:vec single-float-epsilon single-float-epsilon single-float-epsilon) v)
-       v)))
+    (cg:normalize (vec x y z))))
 
 (declaim (ftype (function (camera single-float single-float))))
 (defun camera-handle-mouse-movement (camera xoffset yoffset)
@@ -65,8 +69,8 @@
     (let* ((xoffset (* xoffset sensitivity))
 	   (yoffset (* yoffset sensitivity))
 	   (new-front (camera-calculate-front pitch yaw))
-	   (new-right (norm (sb-cga:cross-product front world-up)))
-	   (new-up (norm (sb-cga:cross-product right front))))
+	   (new-right (norm (cg:cross-product front world-up)))
+	   (new-up (norm (cg:cross-product right front))))
 
       (incf yaw xoffset)
       (incf pitch yoffset)
@@ -77,12 +81,16 @@
       
       )))
 
+#|================================================================================|#
+#| Keyboard input                                                                 |#
+#|================================================================================|#
+
 (defun camera-handle-keyboard (key cam)
   (with-slots (front position speed up) cam
     (case key
-      (:w (vec+= position (sb-cga:vec* front speed)))
-      (:s (vec+= position (sb-cga:vec* front (- speed))))
-      (:a (vec+= position (sb-cga:vec* (sb-cga:normalize (sb-cga:cross-product front up)) (- speed))))
-      (:d (vec+= position (sb-cga:vec* (sb-cga:normalize (sb-cga:cross-product front up)) speed)))
-      (:q (vec+= position (sb-cga:vec* up speed)))
-      (:e (vec+= position (sb-cga:vec* up (- speed)))))))
+      (:w (vec+= position (cg:vec* front speed)))
+      (:s (vec+= position (cg:vec* front (- speed))))
+      (:a (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) (- speed))))
+      (:d (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) speed)))
+      (:q (vec+= position (cg:vec* up speed)))
+      (:e (vec+= position (cg:vec* up (- speed)))))))

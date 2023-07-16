@@ -33,7 +33,7 @@
 (defparameter *batch-size* 0)
 
 (defstruct quad-vertex
-  (position (sb-cga:vec 0.0 0.0 0.0))
+  (position (cg:vec 0.0 0.0 0.0))
   (color #(1.0 1.0 1.0 1.0)))
 
 (defun quad-vertex-array? (array)
@@ -63,10 +63,10 @@
 (defparameter *blue* #(0.0 0.0 1.0 1.0))
 
 (defparameter *quad-vertex-default-position*
-  (vector (sb-cga:vec -0.5 -0.5 +0.5)
-	  (sb-cga:vec +0.5 -0.5 +0.5)
-	  (sb-cga:vec -0.5 +0.5 +0.5)
-	  (sb-cga:vec +0.5 +0.5 +0.5)))
+  (vector (cg:vec -0.5 -0.5 +0.5)
+	  (cg:vec +0.5 -0.5 +0.5)
+	  (cg:vec -0.5 +0.5 +0.5)
+	  (cg:vec +0.5 +0.5 +0.5)))
 
 (defun size-of (type)
   (case type
@@ -121,10 +121,10 @@
 		      :quad-va va
 		      :quad-vb vb
 		      :quad-ib ib
-		      :quad-vertex-positions (vector (sb-cga:vec +0.5 +0.5 +0.5)
-						     (sb-cga:vec +0.5 -0.5 +0.5)
-						     (sb-cga:vec -0.5 -0.5 +0.5)
-						     (sb-cga:vec -0.5 +0.5 +0.5))
+		      :quad-vertex-positions (vector (cg:vec +0.5 +0.5 +0.5)
+						     (cg:vec +0.5 -0.5 +0.5)
+						     (cg:vec -0.5 -0.5 +0.5)
+						     (cg:vec -0.5 +0.5 +0.5))
 		      :quad-shader shader
 		      :quad-count 0
 		      :quad-max-count max-quads
@@ -143,7 +143,7 @@
 	 (view (camera-view *camera*)))
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
-    (shader-set-mat4 shader "u_model" (sb-cga:translate (vec 0.0 0.0 0.0)))))
+    (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))))
 
 (defun renderer-end-scene ()
   (renderer-flush))
@@ -217,7 +217,7 @@
 (defun draw-quad-at (x y z &optional color)
   (assert (typep x 'single-float))
   (with-slots (quad-vb quad-vertex-data) *renderer*
-    (draw-quad-transform (sb-cga:translate (sb-cga:vec x y z)) (or color *white*))))
+    (draw-quad-transform (cg:translate (cg:vec x y z)) (or color *white*))))
 
 (defun draw-quad-transform (transform color)
   (with-slots (quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count) *renderer*
@@ -228,7 +228,7 @@
     (let ((vertex-count 4))
       (loop for i from 0 below vertex-count do
 	(vector-push-extend
-	 (make-quad-vertex :position (sb-cga:transform-point (aref quad-vertex-positions i) transform)
+	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
 			   :color color)
 	 quad-vertex-data))
 

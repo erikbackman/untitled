@@ -199,9 +199,9 @@
 
 (declaim (ftype (function (vec vec vec) simple-array)))
 (defun mat4-look-at (eye center up)
-  (let* ((f (sb-cga:normalize (sb-cga:vec- eye center)))
-	 (l (sb-cga:normalize (sb-cga:cross-product up f)))
-	 (u (sb-cga:cross-product f l))
+  (let* ((f (cg:normalize (cg:vec- eye center)))
+	 (l (cg:normalize (cg:cross-product up f)))
+	 (u (cg:cross-product f l))
 	 (tr (make-identity-matrixf 4)))
     (setf
      (aref tr 0 0) (vec-x l)
