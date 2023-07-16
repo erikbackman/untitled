@@ -53,7 +53,7 @@
       (dotimes (i count)
 	(setf (gl:glaref arr i) (aref data i)))
       
-      (gl:buffer-data :element-array-buffer :static-draw arr)
+      (gl:buffer-data :array-buffer :static-draw arr)
       (gl:free-gl-array arr))))
 
 (defmethod bind ((obj index-buffer))
