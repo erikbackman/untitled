@@ -172,10 +172,10 @@
 
 (defun upload-data (buffer vertex-array)
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
-(:position #(x y z w) :color (r g b a)).
-
-Return value: The amount of bytes written to the BUFFER."
-  (let* ((total-size (vertex-array-size vertex-array))
+(:position #(x y z w) :color (r g b a))."
+  ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
+  ;; how many elements we pushed.
+  (let* ((total-size (* 7 (fill-pointer vertex-array)))
 	 (glarray (gl:alloc-gl-array :float total-size))
 	 (gl-index 0))
     ;; The fill-pointer gets reset to 0 by `begin-batch' for every new
