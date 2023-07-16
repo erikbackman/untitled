@@ -5,6 +5,7 @@
 (defpackage :untitled
   (:nicknames :ut)
   (:use :cl :cl-glfw3 :trivial-main-thread)
+  (:local-nicknames (:cg :sb-cga))
   (:import-from :cl-opengl)
   (:import-from :alexandria :switch :with-gensyms)
   (:import-from :trivia :match :defpattern :guard1)
