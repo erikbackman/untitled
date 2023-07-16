@@ -7,9 +7,9 @@
 (defconstant +2pi+  6.283185)
 (defconstant +pi/180+ 0.017453)
 
-(declaim (ftype (function (single-float) single-float) deg->rad))
+(declaim (ftype (function (number) single-float) deg->rad))
 (defun deg->rad (deg)
-  (* deg +pi/180+))
+  (* (coerce deg 'single-float) +pi/180+))
 
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
