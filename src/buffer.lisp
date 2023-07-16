@@ -4,9 +4,8 @@
   (let ((arr (gl:alloc-gl-array :float size)))
     (dotimes (i (length data))
       (setf (gl:glaref arr i) (aref data i)))
-    (prog1
-	(gl:buffer-data target :dynamic-draw arr)
-      (gl:free-gl-array arr))))
+    (gl:buffer-data target :dynamic-draw arr)
+    (gl:free-gl-array arr)))
 
 (defgeneric bind (obj))
 (defgeneric unbind (obj))
@@ -48,11 +47,14 @@
   (with-slots (id (cnt count)) obj
     (setf id (gl:gen-buffer)
 	  cnt count)
-    (gl:bind-buffer :element-array-buffer id)
+    (gl:bind-buffer :array-buffer id)
     (let ((arr (gl:alloc-gl-array :unsigned-int count)))
+
       (dotimes (i count)
-	(setf (gl:glaref arr i) (aref data i))
-	(gl:buffer-data :element-array-buffer :static-draw arr)))))
+	(setf (gl:glaref arr i) (aref data i)))
+      
+      (gl:buffer-data :element-array-buffer :static-draw arr)
+      (gl:free-gl-array arr))))
 
 (defmethod bind ((obj index-buffer))
   (with-slots (id) obj (gl:bind-buffer :element-array-buffer id)))
