@@ -21,13 +21,17 @@
   (with-slots (position front up) camera
     (mat4-look-at position (cg:vec+ position front) up)))
 
+(defun camera-projection (camera)
+  (with-slots (fov) camera
+    (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0)))
+
 (defun camera-view-spinny (camera)
   (with-slots (position front up sensitivity speed) camera
     (mat4-look-at `#(,(* 10 (sin (* speed (glfw:get-time))))
-		   0.0
-		   ,(* 10 (cos (* speed (glfw:get-time)))))
-		#(0 0 0)
-		#(0 1 0))))
+		     0.0
+		     ,(* 10 (cos (* speed (glfw:get-time)))))
+		  #(0 0 0)
+		  #(0 1 0))))
 
 (defmacro with-camera-position ((x y z) camera &body body)
   (let ((cam (gensym)))
@@ -66,20 +70,11 @@
 (declaim (ftype (function (camera single-float single-float))))
 (defun camera-handle-mouse-movement (camera xoffset yoffset)
   (with-slots (sensitivity yaw pitch right up front world-up) camera
-    (let* ((xoffset (* xoffset sensitivity))
-	   (yoffset (* yoffset sensitivity))
-	   (new-front (camera-calculate-front pitch yaw))
-	   (new-right (norm (cg:cross-product front world-up)))
-	   (new-up (norm (cg:cross-product right front))))
-
-      (incf yaw xoffset)
-      (incf pitch yoffset)
-
-      (setf front new-front)
-      (setf right new-right)
-      (setf up new-up)
-      
-      )))
+    (incf yaw (* xoffset sensitivity))
+    (incf pitch (* yoffset sensitivity))
+    (setf front (camera-calculate-front pitch yaw))
+    (setf right (norm (cg:cross-product front world-up)))
+    (setf up (norm (cg:cross-product right front)))))
 
 #|================================================================================|#
 #| Keyboard input                                                                 |#
