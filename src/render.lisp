@@ -1,10 +1,5 @@
 (in-package :untitled)
 
-(defun draw-indexed (va count)
-  (bind va)
-  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
-		    :count count))
-
 (defun check-gl-error ()
   (let ((err (gl:get-error)))
     (loop while (not (eq :zero err))
@@ -12,20 +7,20 @@
 	     (setf err (gl:get-error)))))
 
 (defparameter *log* nil)
-(defun log! (msg)
-  (when *log* (print msg)))
+(defun log! (msg) (when *log* (print msg)))
+
+(defparameter *white* #(1.0 1.0 1.0 1.0))
+(defparameter *red* #(1.0 0.0 0.0 1.0))
+(defparameter *green* #(0.0 1.0 0.0 1.0))
+(defparameter *blue* #(0.0 0.0 1.0 1.0))
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
 #|================================================================================|#
 
-;; Work in progress, see demo.lisp for a working example.
-
 (defparameter *renderer* nil)
-(defparameter *data-ready* nil)
 
 (defparameter *max-quads* 40)
-(defparameter *batch-size* 0)
 
 (defstruct quad-vertex
   (position (cg:vec 0.0 0.0 0.0))
@@ -52,27 +47,12 @@
   (max-indices)
   (draw-calls))
 
-(defparameter *white* #(1.0 1.0 1.0 1.0))
-(defparameter *red* #(1.0 0.0 0.0 1.0))
-(defparameter *green* #(0.0 1.0 0.0 1.0))
-(defparameter *blue* #(0.0 0.0 1.0 1.0))
-
-(defparameter *quad-vertex-default-position*
-  (vector (cg:vec -0.5 -0.5 +0.5)
-	  (cg:vec +0.5 -0.5 +0.5)
-	  (cg:vec -0.5 +0.5 +0.5)
-	  (cg:vec +0.5 +0.5 +0.5)))
-
 (defun size-of (type)
   (case type
     (:float 4)
     (:vec3 12)
     (:vec4 16)
     (:mat4 64)))
-
-(defun calculate-offset (quad-count)
-  (if (= quad-count *max-quads*) 0
-      (* 4 8 (size-of :float) quad-count)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -92,6 +72,11 @@
 	       
 	     (incf offset 4))
     quad-indices))
+
+(defun draw-indexed (va count)
+  (bind va)
+  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
+		    :count count))
 
 (defun renderer-init ()
   (setf *renderer* nil)
@@ -143,13 +128,15 @@
 (defun renderer-end-scene ()
   (renderer-flush))
 
+#|================================================================================|#
+#| Batching                                                                       |#
+#|================================================================================|#
+
 (defun begin-batch ()
   (with-slots (quad-index-count quad-vertex-data quad-vertex-data-base) *renderer*
-    (setf quad-index-count 0)
     (setf (fill-pointer quad-vertex-data) 0)))
 
 (defun next-batch ()
-  (setf *batch-size* 0)
   (renderer-flush)
   (begin-batch))
 
@@ -158,6 +145,9 @@
      (begin-batch)
      ,@body
      (next-batch)))
+
+(defun new-batch? (vertex-data)
+  (plusp (fill-pointer vertex-data)))
 
 (defun shutdown ()
   (with-slots (quad-ib quad-vb quad-va) *renderer*
@@ -196,7 +186,7 @@
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera*))
 
-    (when *data-ready*
+    (when (new-batch? quad-vertex-data)
       (with-slots (quad-index-count) *renderer*
 	(upload-data quad-vb quad-vertex-data)))
     
@@ -204,8 +194,9 @@
     (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
     (incf (renderer-draw-calls *renderer*))))
 
-(defun vertex-array-size (array)
-  (* 8 (array-total-size array)))
+#|================================================================================|#
+#| Quads                                                                          |#
+#|================================================================================|#
 
 (defun draw-quad (&optional color)
   (draw-quad-at 0 0 0 color))
@@ -226,9 +217,7 @@
 	(vector-push-extend
 	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
 			   :color color)
-	 quad-vertex-data))
-
-      (incf *batch-size* vertex-count))
-    (incf quad-index-count 6)
+	 quad-vertex-data)))
+    
     (incf quad-count)
     (incf quad-vertex-count)))
