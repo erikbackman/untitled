@@ -1,14 +1,9 @@
 (in-package :untitled)
 
-(defun draw-triangles (ib)
-  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
-		    :count (slot-value ib 'count)))
-
-(defun draw-indexed (va)
+(defun draw-indexed (va count)
   (bind va)
-  (let ((count (index-count (get-index-buffer va))))
-    (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
-		      :count count)))
+  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
+		    :count count))
 
 (defun check-gl-error ()
   (let ((err (gl:get-error)))
@@ -199,13 +194,14 @@
 (defun renderer-flush ()
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
+    (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera*))
 
-    (with-slots (quad-index-count) *renderer*
-      (upload-data quad-vb quad-vertex-data))
-    (bind quad-vb)
+    (when *data-ready*
+      (with-slots (quad-index-count) *renderer*
+	(upload-data quad-vb quad-vertex-data)))
+    
     (gl:clear :color-buffer-bit :depth-buffer-bit)
-    (bind quad-ib)
-    (draw-triangles quad-ib)
+    (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
     (incf (renderer-draw-calls *renderer*))))
 
 (defun vertex-array-size (array)
