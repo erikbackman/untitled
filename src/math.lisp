@@ -1,14 +1,15 @@
 (in-package :untitled)
 
-(defconstant +pi/6+ (/ pi 6))
-(defconstant +pi/4+ (/ pi 4))
-(defconstant +pi/3+ (/ pi 3))
-(defconstant +pi/2+ (/ pi 2))
-(defconstant +2pi+ (* 2 pi))
+(defconstant +pi/6+ 0.523598)
+(defconstant +pi/4+ 0.785398)
+(defconstant +pi/3+ 1.047197)
+(defconstant +pi/2+ 1.570796)
+(defconstant +2pi+  6.283185)
 (defconstant +pi/180+ 0.017453)
 
+(declaim (ftype (function (number) single-float) deg->rad))
 (defun deg->rad (deg)
-  (* deg +pi/180+))
+  (* (coerce deg 'single-float) +pi/180+))
 
 (defun make-identity-matrixf (n)
   (let ((m (make-array (list n n) :initial-element 0.0)))
@@ -52,8 +53,8 @@
 	  (incf (aref m3 i j) (* (aref m1 i k) (aref m2 k j))))))
     m3))
 
-(defun matrix* (&rest mats)
-  (reduce #'mat4-mult mats :from-end t))
+(defun matrix** (&rest mats)
+  (reduce #'matrix-mulf mats :from-end t))
 
 (defun matrix*v (mat vec)
   (let ((v (make-array '(4))))
@@ -74,11 +75,12 @@
 ;; | y*x*(1-c)+z*s    y*y*(1-c)+c      y*z*(1-c)-x*s |
 ;; | z*x*(1-c)-y*s    z*y*(1-c)+x*s    z*z*(1-c)+c   |
 (defun mat4-rotate (angle x y z)
-  (declare (type single-float x y z angle))
+  (declare (type (single-float) angle))
   (let* ((tr (make-identity-matrixf 4))
 	 (c (cos angle))
 	 (s (sin angle))
 	 (1-c (- 1 c)))
+    (declare (type (single-float) c s))
     (setf
      (aref tr 0 0) (+ (* x x 1-c) c)
      (aref tr 0 1) (- (* x y 1-c) (* z s))
@@ -181,6 +183,7 @@
 	    (setf (aref w i) (/ (aref v i) mag)))
 	  w))))
 
+
 (defun vec-cross (u v)
   (let ((w (make-array 3)))
     (setf (aref w 0)
@@ -194,24 +197,28 @@
 	     (* (aref u 1) (aref v 0))))
     w))
 
+(declaim (ftype (function (vec vec vec) simple-array)))
 (defun mat4-look-at (eye center up)
-  (declare (type (simple-array float) eye center up))
-  (let* ((f (vec-normalize (vec- eye center)))
-	 (l (vec-normalize (vec-cross up f)))
-	 (u (vec-cross f l))
-	 (tr (make-identity-matrixf 4)))
+  (let* ((f (cg:normalize (cg:vec- eye center)))
+	 (l (cg:normalize (cg:cross-product up f)))
+	 (u (cg:cross-product f l))
+	 (m (make-identity-matrixf 4)))
     (setf
-     (aref tr 0 0) (vec-x l)
-     (aref tr 0 1) (vec-y l)
-     (aref tr 0 2) (vec-z l)
-     (aref tr 1 0) (vec-x u)
-     (aref tr 1 1) (vec-y u)
-     (aref tr 1 2) (vec-z u)
-     (aref tr 2 0) (vec-x f)
-     (aref tr 2 1) (vec-y f)
-     (aref tr 2 2) (vec-z f)
-     (aref tr 0 3) (- (dot l eye))
-     (aref tr 1 3) (- (dot u eye))
-     (aref tr 2 3) (- (dot f eye))
-     (aref tr 3 3) 1)
-    tr))
+     (aref m 0 0) (vec-x l)
+     (aref m 0 1) (vec-y l)
+     (aref m 0 2) (vec-z l)
+     
+     (aref m 1 0) (vec-x u)
+     (aref m 1 1) (vec-y u)
+     (aref m 1 2) (vec-z u)
+     
+     (aref m 2 0) (vec-x f)
+     (aref m 2 1) (vec-y f)
+     (aref m 2 2) (vec-z f)
+
+     (aref m 0 3) (- (dot l eye))
+     (aref m 1 3) (- (dot u eye))
+     (aref m 2 3) (- (dot f eye))
+     
+     (aref m 3 3) 1)
+    m))

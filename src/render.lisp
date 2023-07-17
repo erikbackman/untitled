@@ -1,9 +1,5 @@
 (in-package :untitled)
 
-(defun draw-triangles (ib)
-  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
-		    :count (slot-value ib 'count)))
-
 (defun check-gl-error ()
   (let ((err (gl:get-error)))
     (loop while (not (eq :zero err))
@@ -11,23 +7,24 @@
 	     (setf err (gl:get-error)))))
 
 (defparameter *log* nil)
-(defun log! (msg)
-  (when *log* (print msg)))
+(defun log! (msg) (when *log* (print msg)))
+
+(defparameter *white* #(1.0 1.0 1.0 1.0))
+(defparameter *red* #(1.0 0.0 0.0 1.0))
+(defparameter *green* #(0.0 1.0 0.0 1.0))
+(defparameter *blue* #(0.0 0.0 1.0 1.0))
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
 #|================================================================================|#
 
-;; Work in progress, see demo.lisp for a working example.
-
 (defparameter *renderer* nil)
-(defparameter *data-ready* nil)
 
 (defparameter *max-quads* 40)
 
 (defstruct quad-vertex
-  (position #(0.0 0.0 0.0 1.0) :type (simple-vector 4))
-  (color #(1.0 1.0 1.0 1.0) :type (simple-vector 4)))
+  (position (cg:vec 0.0 0.0 0.0))
+  (color #(1.0 1.0 1.0 1.0)))
 
 (defun quad-vertex-array? (array)
   (every #'quad-vertex-p array))
@@ -50,27 +47,12 @@
   (max-indices)
   (draw-calls))
 
-(defparameter *white* #(1.0 1.0 1.0 1.0))
-(defparameter *red* #(1.0 0.0 0.0 1.0))
-(defparameter *green* #(0.0 1.0 0.0 1.0))
-(defparameter *blue* #(0.0 0.0 1.0 1.0))
-
-(defparameter *quad-vertex-default-position*
-  (vector #(-0.5 -0.5 +0.5 1.0)
-	  #(+0.5 -0.5 +0.5 1.0)
-	  #(-0.5 +0.5 +0.5 1.0)
-	  #(+0.5 +0.5 +0.5 1.0)))
-
 (defun size-of (type)
   (case type
     (:float 4)
     (:vec3 12)
     (:vec4 16)
     (:mat4 64)))
-
-(defun calculate-offset (quad-count)
-  (if (= quad-count *max-quads*) 0
-      (* 4 8 (size-of :float) quad-count)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -83,13 +65,18 @@
 	  do
 	     (setf (aref quad-indices (+ i 0)) (+ offset 0))
 	     (setf (aref quad-indices (+ i 1)) (+ offset 1))
-	     (setf (aref quad-indices (+ i 2)) (+ offset 2))
-	     (setf (aref quad-indices (+ i 3)) (+ offset 2))
-	     (setf (aref quad-indices (+ i 4)) (+ offset 3))
-	     (setf (aref quad-indices (+ i 5)) (+ offset 1))
+	     (setf (aref quad-indices (+ i 2)) (+ offset 3))
+	     (setf (aref quad-indices (+ i 3)) (+ offset 1))
+	     (setf (aref quad-indices (+ i 4)) (+ offset 2))
+	     (setf (aref quad-indices (+ i 5)) (+ offset 3))
 	       
 	     (incf offset 4))
     quad-indices))
+
+(defun draw-indexed (va count)
+  (bind va)
+  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
+		    :count count))
 
 (defun renderer-init ()
   (setf *renderer* nil)
@@ -101,11 +88,11 @@
 	
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
-	 (shader (with-slots (vs fs) (load-shader "quad-shader.glsl")
+	 (shader (with-slots (vs fs) (load-shader "shader.glsl")
 		   (create-shader vs fs))))
 
     (add-vertex-buffer
-     va vb (mk-buffer-layout '(:type (:float 4) :name "a_position")
+     va vb (mk-buffer-layout '(:type (:float 3) :name "a_position")
 			     '(:type (:float 4) :name "a_color")))
 
     (set-index-buffer va ib)
@@ -114,10 +101,10 @@
 		      :quad-va va
 		      :quad-vb vb
 		      :quad-ib ib
-		      :quad-vertex-positions (vector #(-0.5 -0.5 +0.5 1.0)
-						     #(+0.5 -0.5 +0.5 1.0)
-						     #(-0.5 +0.5 +0.5 1.0)
-						     #(+0.5 +0.5 +0.5 1.0))
+		      :quad-vertex-positions (vector (cg:vec +0.5 +0.5 +0.5)
+						     (cg:vec +0.5 -0.5 +0.5)
+						     (cg:vec -0.5 -0.5 +0.5)
+						     (cg:vec -0.5 +0.5 +0.5))
 		      :quad-shader shader
 		      :quad-count 0
 		      :quad-max-count max-quads
@@ -136,14 +123,17 @@
 	 (view (camera-view *camera*)))
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
-    (shader-set-mat4 shader "u_model" (mat4-translate 0.0 0.0 0.0))))
+    (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))))
 
 (defun renderer-end-scene ()
   (renderer-flush))
 
+#|================================================================================|#
+#| Batching                                                                       |#
+#|================================================================================|#
+
 (defun begin-batch ()
   (with-slots (quad-index-count quad-vertex-data quad-vertex-data-base) *renderer*
-    (setf quad-index-count 0)
     (setf (fill-pointer quad-vertex-data) 0)))
 
 (defun next-batch ()
@@ -156,6 +146,9 @@
      ,@body
      (next-batch)))
 
+(defun new-batch? (vertex-data)
+  (plusp (fill-pointer vertex-data)))
+
 (defun shutdown ()
   (with-slots (quad-ib quad-vb quad-va) *renderer*
     (gl:delete-buffers `(,(id quad-ib)
@@ -164,10 +157,10 @@
 
 (defun upload-data (buffer vertex-array)
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
-(:position #(x y z w) :color (r g b a)).
-
-Return value: The amount of bytes written to the BUFFER."
-  (let* ((total-size (vertex-array-size vertex-array))
+(:position #(x y z w) :color (r g b a))."
+  ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
+  ;; how many elements we pushed.
+  (let* ((total-size (* 7 (fill-pointer vertex-array)))
 	 (glarray (gl:alloc-gl-array :float total-size))
 	 (gl-index 0))
     ;; The fill-pointer gets reset to 0 by `begin-batch' for every new
@@ -189,39 +182,42 @@ Return value: The amount of bytes written to the BUFFER."
     (unbind buffer)))
 
 (defun renderer-flush ()
-  (with-slots (quad-vb quad-va quad-shader quad-vertex-data) *renderer*
-    (let ((ib (get-index-buffer quad-va)))
-      (shader-set-mat4 quad-shader "u_view" (camera-view-spinny *camera*))
+  (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
+    (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
+    (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera*))
 
+    (when (new-batch? quad-vertex-data)
       (with-slots (quad-index-count) *renderer*
-	(upload-data quad-vb quad-vertex-data))
-      (bind quad-vb)
-      (gl:clear :color-buffer-bit :depth-buffer-bit)
-      (draw-triangles ib)
-      (incf (renderer-draw-calls *renderer*)))))
+	(upload-data quad-vb quad-vertex-data)))
+    
+    (gl:clear :color-buffer-bit :depth-buffer-bit)
+    (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
+    (incf (renderer-draw-calls *renderer*))))
 
-(defun vertex-array-size (array)
-  (* 8 (array-total-size array)))
+#|================================================================================|#
+#| Quads                                                                          |#
+#|================================================================================|#
 
 (defun draw-quad (&optional color)
   (draw-quad-at 0 0 0 color))
 
 (defun draw-quad-at (x y z &optional color)
+  (assert (typep x 'single-float))
   (with-slots (quad-vb quad-vertex-data) *renderer*
-    (draw-quad-transform (mat4-translate x y z) (or color *white*))))
+    (draw-quad-transform (cg:translate (cg:vec x y z)) (or color *white*))))
 
 (defun draw-quad-transform (transform color)
   (with-slots (quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count) *renderer*
     
     (when (>= (renderer-quad-index-count *renderer*) (renderer-max-indices *renderer*))
       (next-batch))
-    
+
     (let ((vertex-count 4))
       (loop for i from 0 below vertex-count do
-	(vector-push-extend (make-quad-vertex :position (matrix*v transform (aref quad-vertex-positions i))
-					      :color color)
-			    quad-vertex-data)))
-
-    (incf quad-index-count 6)
+	(vector-push-extend
+	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
+			   :color color)
+	 quad-vertex-data)))
+    
     (incf quad-count)
     (incf quad-vertex-count)))

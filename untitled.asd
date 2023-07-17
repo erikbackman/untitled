@@ -6,6 +6,7 @@
 	       :trivia
 	       :cl-glfw3
 	       :cl-opengl
+	       :sb-cga
 	       :trivial-main-thread)
   :components ((:module "src"
                 :components
@@ -19,7 +20,6 @@
 		 (:file "buffer")
 		 (:file "window")
 		 (:file "render")
-		 (:file "demo")
 		 (:file "main"))))
   :build-operation "program-op"
   :entry-point "untitled::main"
