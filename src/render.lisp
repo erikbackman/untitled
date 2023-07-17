@@ -184,7 +184,7 @@
 (defun renderer-flush ()
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
-    (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera*))
+    (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
 
     (when (new-batch? quad-vertex-data)
       (with-slots (quad-index-count) *renderer*

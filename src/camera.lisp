@@ -21,9 +21,9 @@
   (with-slots (position front up) camera
     (mat4-look-at position (cg:vec+ position front) up)))
 
-(defun camera-projection (camera)
+(defun camera-projection (camera aspect)
   (with-slots (fov) camera
-    (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0)))
+    (mat4-perspective (deg->rad fov) aspect 0.1 100.0)))
 
 (defun camera-view-spinny (camera)
   (with-slots (position front up sensitivity speed) camera
