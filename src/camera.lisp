@@ -86,4 +86,6 @@
       (when (keydown? :w) (vec+= position (cg:vec* front s)))
       (when (keydown? :s) (vec+= position (cg:vec* front (- s))))
       (when (keydown? :a) (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) (- s))))
-      (when (keydown? :d) (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) s))))))
+      (when (keydown? :d) (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) s)))
+      (when (keydown? :e) (vec+= position (cg:vec* up s)))
+      (when (keydown? :q) (vec+= position (cg:vec* up (- s)))))))
