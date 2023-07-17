@@ -1,5 +1,11 @@
 (in-package :untitled)
 
+;; This doesn't work with the current changes.
+
+(defun draw-triangles (ib)
+  (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
+		    :count 18))
+
 (defparameter *cube-positions*
   #(
     #( 2.0  5.0 -15.0)
