@@ -39,48 +39,54 @@
 
 (def-key-callback handle-key-input (window key scancode action mod-keys)
   (declare (ignore window scancode mod-keys))
-  (when (and (eq action :press) (eq key :escape))
-    (glfw:set-window-should-close))
-  (when (or (eq action :press)
-	    (eq action :repeat))
-    (camera-handle-keyboard key *camera*)))
+  (when (eq key :escape) (glfw:set-window-should-close))
+  (case action
+    (:press (set-key key t))
+    (:release (set-key key nil))))
 
 ;; TODO: Clean this up
 (defparameter *last-y* 0)
 (defparameter *last-x* 0)
 (defparameter *first-mouse* t)
 
+(def-mouse-button-callback mouse-button-callback (window button action mod-keys)
+  (declare (ignore window mod-keys))
+  (case button
+    (:left (set-key :mleft (eq action :press)))
+    (:right (set-key :mright (eq action :press)))))
+
 (declaim (ftype (function (sb-sys:system-area-pointer single-float single-float) nil)))
 (def-cursor-pos-callback handle-mouse-movement (window x y)
   (declare (ignore window))
+  (when (keydown? :mleft)
+    (when *first-mouse*
+      (setf *last-x* x
+	    *last-y* y
+	    *first-mouse* nil))
+   
+   (let ((xoffset (- x *last-x*))
+	 (yoffset (- *last-y* y)))
 
-  (when *first-mouse*
-    (setf *last-x* x
-	  *last-y* y
-	  *first-mouse* nil))
-  
-  (let ((xoffset (- x *last-x*))
-	(yoffset (- *last-y* y)))
-
-    (setf *last-x* x
-	  *last-y* y)
-    
-    (camera-handle-mouse-movement *camera*
-				  xoffset yoffset)))
+     (setf *last-x* x)
+     (setf *last-y* y)
+     
+     (camera-handle-mouse-movement *camera* xoffset yoffset))))
 
 
 (defmacro with-window ((&key title width height on-keyboard on-mouse) &body body)
-  `(with-init-window (:title ,title
-		      :width ,width :height ,height
-		      :samples 4 :refresh-rate 60)
-     (setf %gl:*gl-get-proc-address* #'get-proc-address)
+  `(with-body-in-main-thread ()
+     (with-init-window (:title ,title
+			:width ,width :height ,height
+			:samples 4 :refresh-rate 60)
+       (setf %gl:*gl-get-proc-address* #'get-proc-address)
 
-     (when ,on-keyboard (set-key-callback ,on-keyboard))
-     (when ,on-mouse (set-cursor-position-callback ,on-mouse))
-     (set-window-size-callback 'update-viewport)
+       (when ,on-keyboard (set-key-callback ,on-keyboard))
+       (when ,on-mouse (set-cursor-position-callback ,on-mouse))
+       (set-window-size-callback 'update-viewport)
+       (set-mouse-button-callback 'mouse-button-callback)
      
-     (glfw:swap-interval 1)		; vsync
-     (init-camera)
-     (init-gl)
-     (set-viewport ,width ,height)
-     ,@body))
+       (glfw:swap-interval 1)		; vsync
+       (init-camera)
+       (init-gl)
+       (set-viewport ,width ,height)
+       ,@body)))

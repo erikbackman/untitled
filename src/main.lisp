@@ -39,13 +39,20 @@
 	  
 	   (loop for pos across *positions3*
 		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *blue*)))
-	
-	 (loop until (window-should-close-p)
-	       do
-		  (renderer-flush)
 
-		  (swap-buffers)
-		  (poll-events))
+
+	 (let ((time 0.0f0)
+	       (last-frame-time 0.0f0))
+	   (loop until (window-should-close-p)
+		 do (setf time (coerce (glfw:get-time) 'single-float))
+		    (setf *timestep* (* (- time last-frame-time) 1000.0f0))
+		    (setf last-frame-time time)
+		 do
+		    (renderer-flush)
+		    (camera-handle-keyboard *camera*)
+		    (swap-buffers)
+		    (poll-events)
+		 ))
 	 (shutdown))))
 
 (main)
