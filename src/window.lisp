@@ -41,8 +41,8 @@
   (declare (ignore window scancode mod-keys))
   (when (eq key :escape) (glfw:set-window-should-close))
   (case action
-    (:press (set-key key t))
-    (:release (set-key key nil))))
+    (:press (set-key-state key t))
+    (:release (set-key-state key nil))))
 
 ;; TODO: Clean this up
 (defparameter *last-y* 0)
@@ -52,8 +52,8 @@
 (def-mouse-button-callback mouse-button-callback (window button action mod-keys)
   (declare (ignore window mod-keys))
   (case button
-    (:left (set-key :mleft (eq action :press)))
-    (:right (set-key :mright (eq action :press)))))
+    (:left (set-key-state :mleft (eq action :press)))
+    (:right (set-key-state :mright (eq action :press)))))
 
 (declaim (ftype (function (sb-sys:system-area-pointer single-float single-float) nil)))
 (def-cursor-pos-callback handle-mouse-movement (window x y)

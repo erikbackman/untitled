@@ -4,7 +4,7 @@
 
 (defparameter *input-state* nil)
 
-(defun set-key (key state)
+(defun set-key-state (key state)
   (setf (getf *input-state* key) state))
 
 (defun keydown? (key) (getf *input-state* key))
