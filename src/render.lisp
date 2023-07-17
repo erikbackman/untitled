@@ -146,6 +146,12 @@
      ,@body
      (next-batch)))
 
+(defmacro render-batch+ (&rest batches)
+  `(progn
+     (begin-batch)
+     ,@batches
+     (next-batch)))
+
 (defun new-batch? (vertex-data)
   (plusp (fill-pointer vertex-data)))
 
@@ -221,3 +227,31 @@
     
     (incf quad-count)
     (incf quad-vertex-count)))
+
+(defun draw-quad-rotated (x y z rotation axis &optional color (scale-x 1.0) (scale-y 1.0))
+  (with-slots (quad-vertex-positions quad-vertex-data quad-count quad-vertex-count) *renderer*
+    (let ((transform (matrix* (cg:translate (cg:vec x y z) )
+			      (cg:rotate-around axis (deg->rad rotation))
+			      (cg:scale* scale-x scale-y 1.0))))
+
+      (loop for i from 0 to 3 do
+	(vector-push-extend
+	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
+			   :color (or color *white*))
+	 quad-vertex-data))
+
+      (incf quad-count)
+      (incf quad-vertex-count))))
+
+#|================================================================================|#
+#| Cubes                                                                          |#
+#|================================================================================|#
+
+(defun draw-cube (x y z &optional color)
+  (draw-quad-at (- 0.5 x) (- 0.5 y) (- 0.5 z) color)  ; fo
+  (draw-quad-at (- 0.5 x) (- 0.5 y) (- -0.5 z) color) ; ba
+  
+  (draw-quad-rotated (- -0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*) ;le
+  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*) ;ri
+  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*) ;bo
+  (draw-quad-rotated (- +0.5 x) (- 1.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*)) ;to

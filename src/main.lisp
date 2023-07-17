@@ -32,14 +32,14 @@
 
 	 (render-batch
 	   (loop for pos across *positions*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *green*))
-	  
-	   (loop for pos across *positions2*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *red*))
-	  
-	   (loop for pos across *positions3*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *blue*)))
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*))
 
+	   (loop for pos across *positions2*
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*))
+
+	   (loop for pos across *positions3*
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*)))
+	 
 
 	 (let ((time 0.0f0)
 	       (last-frame-time 0.0f0))
@@ -51,8 +51,8 @@
 		    (renderer-flush)
 		    (camera-handle-keyboard *camera*)
 		    (swap-buffers)
-		    (poll-events)
-		 ))
+		    (poll-events)))
+	 
 	 (shutdown))))
 
 (main)
