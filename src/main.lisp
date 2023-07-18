@@ -32,13 +32,13 @@
 
 	 (render-batch
 	   (loop for pos across *positions*
-		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*))
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos)))
 
 	   (loop for pos across *positions2*
-		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*))
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos)))
 
 	   (loop for pos across *positions3*
-		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos) *green*)))
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos))))
 	 
 
 	 (let ((time 0.0f0)

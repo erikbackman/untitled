@@ -247,11 +247,10 @@
 #| Cubes                                                                          |#
 #|================================================================================|#
 
-(defun draw-cube (x y z &optional color)
-  (draw-quad-at (- 0.5 x) (- 0.5 y) (- 0.5 z) color)  ; fo
-  (draw-quad-at (- 0.5 x) (- 0.5 y) (- -0.5 z) color) ; ba
-  
-  (draw-quad-rotated (- -0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*) ;le
-  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*) ;ri
-  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*) ;bo
-  (draw-quad-rotated (- +0.5 x) (- 1.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*)) ;to
+(defun draw-cube (x y z)
+  (draw-quad-at (- 0.5 x) (- 0.5 y) (- 0.5 z) *green*)
+  (draw-quad-at (- 0.5 x) (- 0.5 y) (- -0.5 z) *green*)
+  (draw-quad-rotated (- -0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*)
+  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*)
+  (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*)
+  (draw-quad-rotated (- +0.5 x) (- 1.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*))
