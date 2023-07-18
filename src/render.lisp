@@ -202,14 +202,7 @@
 #| Quads                                                                          |#
 #|================================================================================|#
 
-(defun draw-quad (&optional color)
-  (draw-quad-at 0 0 0 color))
-
-(defun draw-quad-at (x y z &optional color)
-  (with-slots (quad-vb quad-vertex-data) *renderer*
-    (draw-quad-transform (cg:translate (cg:vec x y z)) (or color *white*))))
-
-(defun draw-quad-transform (transform color)
+(defun draw-quad-transform (transform &optional (color *white*))
   (with-slots (quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count) *renderer*
 
     (when (quad-index-count-maxed? *renderer*)
@@ -226,25 +219,18 @@
     (incf quad-count)
     (incf quad-vertex-count)))
 
+(defun draw-quad-at (x y z &optional color)
+  (with-slots (quad-vb quad-vertex-data) *renderer*
+    (draw-quad-transform (cg:translate (cg:vec x y z)) (or color *white*))))
+
+(defun draw-quad (&optional color) (draw-quad-at 0 0 0 color))
+
 (defun draw-quad-rotated (x y z rotation axis &optional color (scale-x 1.0) (scale-y 1.0))
   (with-slots (quad-vertex-positions quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
-
-    (when (quad-index-count-maxed? *renderer*)
-      (next-batch))
-    
     (let ((transform (matrix* (cg:translate (cg:vec x y z) )
 			      (cg:rotate-around axis (deg->rad rotation))
 			      (cg:scale* scale-x scale-y 1.0))))
-      
-      (loop for i from 0 to 3 do
-	(vector-push-extend
-	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
-			   :color (or color *white*))
-	 quad-vertex-data))
-
-      (incf quad-index-count)
-      (incf quad-count)
-      (incf quad-vertex-count))))
+      (draw-quad-transform transform color))))
 
 #|================================================================================|#
 #| Cubes                                                                          |#
