@@ -15,7 +15,6 @@
 		 (:file "math")
 		 (:file "input")
 		 (:file "camera")
-		 (:file "shapes")
 		 (:file "function")
 		 (:file "shader")
 		 (:file "buffer")
