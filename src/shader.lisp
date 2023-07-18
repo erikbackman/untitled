@@ -39,8 +39,16 @@
 		(format s "~a~%" line))
 	    finally (return (make-shader-src :vs (elt content 0) :fs (elt content 1)))))))
 
+
+(defvar *shader-locations* (make-hash-table))
+
+(defun shader-get-uniform (shader name)
+  (or (gethash name *shader-locations*)
+      (setf (gethash name *shader-locations*)
+	    (gl:get-uniform-location shader name))))
+
 (defun shader-set-float (shader name x &optional y z w)
-  (gl:uniformf (funcall 'gl:get-uniform-location shader name) x y z w))
+  (gl:uniformf (shader-get-uniform shader name) x y z w))
 
 (defun shader-set-mat4 (shader name matrix)
-  (gl:uniform-matrix-4fv (gl:get-uniform-location shader name) matrix))
+  (gl:uniform-matrix-4fv (shader-get-uniform shader name) matrix))
