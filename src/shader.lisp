@@ -40,7 +40,7 @@
 	    finally (return (make-shader-src :vs (elt content 0) :fs (elt content 1)))))))
 
 
-(defvar *shader-locations* (make-hash-table))
+(defvar *shader-locations* (make-hash-table :test 'equal))
 
 (defun shader-get-uniform (shader name)
   (or (gethash name *shader-locations*)
