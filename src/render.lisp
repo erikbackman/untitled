@@ -146,12 +146,6 @@
      ,@body
      (next-batch)))
 
-(defmacro render-batch+ (&rest batches)
-  `(progn
-     (begin-batch)
-     ,@batches
-     (next-batch)))
-
 (defun new-batch? (vertex-data)
   (plusp (fill-pointer vertex-data)))
 
