@@ -13,6 +13,7 @@
                 ((:file "package")
 		 (:file "array-utils")
 		 (:file "math")
+		 (:file "input")
 		 (:file "camera")
 		 (:file "shapes")
 		 (:file "function")

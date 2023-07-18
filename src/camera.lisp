@@ -10,7 +10,7 @@
   (world-up (vec 0.0 1.0 0.0))
   (yaw -90.0)
   (pitch 0.1)
-  (speed 0.2)
+  (speed 0.02)
   (sensitivity 0.1)
   (fov 45.0))
 
@@ -21,9 +21,9 @@
   (with-slots (position front up) camera
     (mat4-look-at position (cg:vec+ position front) up)))
 
-(defun camera-projection (camera)
+(defun camera-projection (camera aspect)
   (with-slots (fov) camera
-    (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0)))
+    (mat4-perspective (deg->rad fov) aspect 0.1 100.0)))
 
 (defun camera-view-spinny (camera)
   (with-slots (position front up sensitivity speed) camera
@@ -80,12 +80,12 @@
 #| Keyboard input                                                                 |#
 #|================================================================================|#
 
-(defun camera-handle-keyboard (key cam)
+(defun camera-handle-keyboard (cam)
   (with-slots (front position speed up) cam
-    (case key
-      (:w (vec+= position (cg:vec* front speed)))
-      (:s (vec+= position (cg:vec* front (- speed))))
-      (:a (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) (- speed))))
-      (:d (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) speed)))
-      (:q (vec+= position (cg:vec* up speed)))
-      (:e (vec+= position (cg:vec* up (- speed)))))))
+    (let ((s (* *timestep* speed)))
+      (when (keydown? :w) (vec+= position (cg:vec* front s)))
+      (when (keydown? :s) (vec+= position (cg:vec* front (- s))))
+      (when (keydown? :a) (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) (- s))))
+      (when (keydown? :d) (vec+= position (cg:vec* (cg:normalize (cg:cross-product front up)) s)))
+      (when (keydown? :e) (vec+= position (cg:vec* up s)))
+      (when (keydown? :q) (vec+= position (cg:vec* up (- s)))))))

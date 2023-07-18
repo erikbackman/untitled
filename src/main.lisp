@@ -32,20 +32,27 @@
 
 	 (render-batch
 	   (loop for pos across *positions*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *green*))
-	  
-	   (loop for pos across *positions2*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *red*))
-	  
-	   (loop for pos across *positions3*
-		 do (draw-quad-at (vec-x pos) (vec-y pos) (vec-z pos) *blue*)))
-	
-	 (loop until (window-should-close-p)
-	       do
-		  (renderer-flush)
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos)))
 
-		  (swap-buffers)
-		  (poll-events))
+	   (loop for pos across *positions2*
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos)))
+
+	   (loop for pos across *positions3*
+		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos))))
+	 
+
+	 (let ((time 0.0f0)
+	       (last-frame-time 0.0f0))
+	   (loop until (window-should-close-p)
+		 do (setf time (coerce (glfw:get-time) 'single-float))
+		    (setf *timestep* (* (- time last-frame-time) 1000.0f0))
+		    (setf last-frame-time time)
+		 do
+		    (renderer-flush)
+		    (camera-handle-keyboard *camera*)
+		    (swap-buffers)
+		    (poll-events)))
+	 
 	 (shutdown))))
 
 (main)
