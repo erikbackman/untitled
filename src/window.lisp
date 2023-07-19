@@ -29,6 +29,10 @@
   
   (gl:depth-func :lequal)
   ;;(gl:disable :cull-face) ;; disable for now
+
+  (gl:line-width 3.0)
+  (gl:enable :line-smooth)
+  
   (gl:hint :perspective-correction-hint :nicest))
 
 (def-window-size-callback update-viewport (window w h)

@@ -29,20 +29,27 @@
 (defun quad-vertex-array? (array)
   (every #'quad-vertex-p array))
 
+(defstruct line-vertex
+  (position (cg:vec 0.0 0.0 0.0))
+  (color #(1.0 1.0 1.0 1.0)))
+
 (defstruct renderer
   (quad-va)
   (quad-vb)
   (quad-ib)
-  
   (quad-vertex-data)
   (quad-vertex-positions)
   (quad-shader)
-  
   (quad-count)
   (quad-max-count)
   (quad-indices)
   (quad-index-count)
   (quad-vertex-count)
+
+  (line-va)
+  (line-vb)
+  (line-shader)
+  (line-vertex-data)
   
   (max-indices)
   (draw-calls))
@@ -53,7 +60,8 @@
     (:vec3 12)
     (:vec4 16)
     (:mat4 64)
-    (:quad-vertex 28)))
+    (:quad-vertex 28)
+    (:line-vertex 28)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -79,23 +87,39 @@
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
 		    :count count))
 
+(defun draw-lines (va count)
+  (bind va)
+  (gl:draw-arrays :lines 0 count))
+
 (defun renderer-init ()
   (setf *renderer* nil)
   (let* ((max-quads 200)
 	 (max-vertices (* 4 max-quads))
 	 (max-indices (* 6 max-quads))
+
+	 ;; Quads
 	 (vb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :quad-vertex))))
-	
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
 	 (shader (with-slots (vs fs) (load-shader "shader.glsl")
-		   (create-shader vs fs))))
+		   (create-shader vs fs)))
 
-    (add-vertex-buffer
-     va vb (mk-buffer-layout '(:type (:float 3) :name "a_position")
-			     '(:type (:float 4) :name "a_color")))
+	 ;; Lines
+	 (lvb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :line-vertex))))
+	 (lva (make-instance 'vertex-array))
+	 (lshader (with-slots (vs fs) (load-shader "shader.glsl")
+		    (create-shader vs fs)))
+	 )
 
+
+    ;; Quads
+    (add-vertex-buffer va vb (mk-buffer-layout '(:type (:float 3) :name "a_position")
+					       '(:type (:float 4) :name "a_color")))
     (set-index-buffer va ib)
+
+    ;; Lines
+    (add-vertex-buffer lva lvb (mk-buffer-layout '(:type (:float 3) :name "a_position")
+						 '(:type (:float 4) :name "a_color")))
     
     (setf *renderer* (make-renderer
 		      :quad-va va
@@ -112,6 +136,12 @@
 		      :max-indices max-indices
 		      :quad-index-count 0
 		      :quad-vertex-count 0
+
+		      :line-va lva
+		      :line-vb lvb
+		      :line-shader lshader
+		      :line-vertex-data (make-array 0 :fill-pointer 0)
+		      
 		      :draw-calls 0))))
 
 (defun renderer-begin-scene ()
@@ -169,11 +199,11 @@
     (loop for i from 0 below (fill-pointer vertex-array)
 	  for vertex = (aref vertex-array i)
 	  ;; Write the position data to the array
-	  do (loop for p across (quad-vertex-position vertex)
+	  do (loop for p across (slot-value vertex 'position)
 		   do (setf (gl:glaref glarray gl-index) p)
 		      (incf gl-index))
 	     ;; Followed by the color data
-	     (loop for c across (quad-vertex-color vertex)
+	     (loop for c across (slot-value vertex 'color)
 		   do (setf (gl:glaref glarray gl-index) c)
 		      (incf gl-index)))
     (bind buffer)
@@ -186,13 +216,21 @@
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
 
+    (gl:clear :color-buffer-bit :depth-buffer-bit)
+    
     (when (new-batch? quad-vertex-data)
       (with-slots (quad-index-count) *renderer*
 	(upload-data quad-vb quad-vertex-data)))
-    
-    (gl:clear :color-buffer-bit :depth-buffer-bit)
+
     (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
-    (incf (renderer-draw-calls *renderer*))))
+    (incf (renderer-draw-calls *renderer*))
+
+    (with-slots (line-vertex-data line-vb line-va) *renderer*
+      (when line-vertex-data
+	(upload-data line-vb line-vertex-data)
+	(draw-lines line-va 6)
+	(incf (renderer-draw-calls *renderer*))))
+    ))
 
 (defun quad-index-count-maxed? (renderer)
   (with-slots (quad-index-count max-indices) renderer
@@ -243,3 +281,14 @@
   (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*)
   (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*)
   (draw-quad-rotated (- +0.5 x) (- 1.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*))
+
+
+#|================================================================================|#
+#| Lines                                                                          |#
+#|================================================================================|#
+
+(defun draw-line (p0 p1 &optional color)
+  (with-slots (line-vertex-data) *renderer*
+    (let ((c (or color *white*)))
+      (vector-push-extend (make-line-vertex :position p0 :color c) line-vertex-data)
+      (vector-push-extend (make-line-vertex :position p1 :color c) line-vertex-data))))
