@@ -52,7 +52,8 @@
     (:float 4)
     (:vec3 12)
     (:vec4 16)
-    (:mat4 64)))
+    (:mat4 64)
+    (:quad-vertex 28)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -81,10 +82,9 @@
 (defun renderer-init ()
   (setf *renderer* nil)
   (let* ((max-quads 200)
+	 (max-vertices (* 4 max-quads))
 	 (max-indices (* 6 max-quads))
-	 (vb (make-instance 'vertex-buffer
-			    :data #()
-			    :size (* 2 (size-of :mat4) *max-quads*)))
+	 (vb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :quad-vertex))))
 	
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
