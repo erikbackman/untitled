@@ -226,11 +226,10 @@
     (incf (renderer-draw-calls *renderer*))
 
     (with-slots (line-vertex-data line-vb line-va) *renderer*
-      (when line-vertex-data
+      (when (new-batch? line-vertex-data)
 	(upload-data line-vb line-vertex-data)
 	(draw-lines line-va 6)
-	(incf (renderer-draw-calls *renderer*))))
-    ))
+	(incf (renderer-draw-calls *renderer*))))))
 
 (defun quad-index-count-maxed? (renderer)
   (with-slots (quad-index-count max-indices) renderer
