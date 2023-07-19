@@ -1,5 +1,7 @@
 (in-package :untitled)
 
+(defvar *shader-locations* (make-hash-table :test 'equal))
+
 (defstruct shader-src vs fs)
 
 (defun make-string-stream ()
@@ -23,24 +25,22 @@
     (gl:delete-shader fs)
     program))
 
-(defun load-shader (file-path)
-  (let ((content `#(,(make-string-stream)
-		    ,(make-string-stream)))
-	(type))
-    (with-open-file (lines file-path)
-      (loop for line = (read-line lines nil)
-	    while line
-	    if (uiop:string-prefix-p "#shader" line) do
-	      (switch ((subseq line 8) :test #'equal)
-		("vertex" (setf type 0))
-		("fragment" (setf type 1)))
-	    else do
+(defun parse-shader-file (filepath)
+  (let ((content `#(,(make-string-stream) ,(make-string-stream)))
+	(type 0))
+    (with-open-file (lines filepath)
+      (flet ((next () (read-line lines nil)))
+	(do ((line (next) (next)))
+	    ((null line)
+	     (make-shader-src :vs (elt content 0) :fs (elt content 1)))
+	  (if (uiop:string-prefix-p "#shader" line)
+	      (setf type (if (string= "vertex" (subseq line 8)) 0 1))
 	      (with-output-to-string (s (elt content type))
-		(format s "~a~%" line))
-	    finally (return (make-shader-src :vs (elt content 0) :fs (elt content 1)))))))
+		(format s "~a~%" line))))))))
 
-
-(defvar *shader-locations* (make-hash-table :test 'equal))
+(defun shader-from-file (filepath)
+  (with-slots (vs fs) (parse-shader-file filepath)
+    (create-shader vs fs)))
 
 (defun shader-get-uniform (shader name)
   (or (gethash name *shader-locations*)

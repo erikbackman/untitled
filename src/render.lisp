@@ -101,14 +101,12 @@
 	 (vb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :quad-vertex))))
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
-	 (shader (with-slots (vs fs) (load-shader "shader.glsl")
-		   (create-shader vs fs)))
+	 (shader (shader-from-file "shader.glsl"))
 
 	 ;; Lines
 	 (lvb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :line-vertex))))
 	 (lva (make-instance 'vertex-array))
-	 (lshader (with-slots (vs fs) (load-shader "shader.glsl")
-		    (create-shader vs fs)))
+	 (lshader (shader-from-file "shader.glsl"))
 	 )
 
 
