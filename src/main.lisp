@@ -20,7 +20,7 @@
     #( 1.3 -2.0 -2.5)
     ))
 
-(defparameter *faded* #(0.83 0.83 0.83 0.2))
+(defparameter *faded* #(0.95 0.95 0.95 0.4))
 (defparameter *origin* (cg:vec 0.0 0.0 0.0))
 
 (defun main ()
@@ -43,7 +43,7 @@
 	   (loop for pos across *positions3*
 		 do (draw-cube (vec-x pos) (vec-y pos) (vec-z pos)))
 
-	   (draw-quad-rotated 0.0 0.48 0.0 90 (cg:vec 1.0 0.0 0.0) *faded* 50.0 50.0)
+	   (draw-quad-rotated 0.0 0.49 0.0 90 (cg:vec 1.0 0.0 0.0) *faded* 50.0 50.0)
 	   
 	   (draw-line (cg:vec 0.0 -25.0 0.0) (cg:vec 0.0 25.0 0.0) *blue*)
 	   (draw-line (cg:vec -25.0 0.0 0.0) (cg:vec 25.0 0.0 0.0) *red*)
