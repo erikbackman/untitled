@@ -68,19 +68,17 @@
     (setf draw-calls 0)))
 
 (defun make-quad-indices (count)
-  (let* ((quad-indices (make-array count))
-	 (offset 0))
-    (loop for i from 0 below count by 6
-	  do
-	     (setf (aref quad-indices (+ i 0)) (+ offset 0))
-	     (setf (aref quad-indices (+ i 1)) (+ offset 1))
-	     (setf (aref quad-indices (+ i 2)) (+ offset 3))
-	     (setf (aref quad-indices (+ i 3)) (+ offset 1))
-	     (setf (aref quad-indices (+ i 4)) (+ offset 2))
-	     (setf (aref quad-indices (+ i 5)) (+ offset 3))
-	       
-	     (incf offset 4))
-    quad-indices))
+  (let ((quad-indices (make-array 0 :fill-pointer 0))
+	(offset 0))
+    (do ((i 0 (+ 6 i)))
+	((>= i count) quad-indices)
+      (vector-push-extend (+ offset 0) quad-indices)
+      (vector-push-extend (+ offset 1) quad-indices)
+      (vector-push-extend (+ offset 3) quad-indices)
+      (vector-push-extend (+ offset 1) quad-indices)
+      (vector-push-extend (+ offset 2) quad-indices)
+      (vector-push-extend (+ offset 3) quad-indices)
+      (incf offset 4))))
 
 (defun draw-indexed (va count)
   (bind va)
