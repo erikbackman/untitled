@@ -28,7 +28,7 @@
   (gl:depth-mask t)
   
   (gl:depth-func :lequal)
-  ;;(gl:disable :cull-face) ;; disable for now
+  (gl:disable :cull-face) ;; disable for now
 
   (gl:line-width 3.0)
   (gl:enable :line-smooth)
