@@ -10,7 +10,7 @@
   (world-up (vec 0.0 1.0 0.0))
   (yaw -90.0)
   (pitch 0.1)
-  (speed 0.02)
+  (speed 0.01)
   (sensitivity 0.1)
   (fov 45.0))
 
