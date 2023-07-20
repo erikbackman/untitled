@@ -78,10 +78,10 @@
 	((>= i count) quad-indices)
       (vector-push-extend (+ offset 0) quad-indices)
       (vector-push-extend (+ offset 1) quad-indices)
-      (vector-push-extend (+ offset 3) quad-indices)
-      (vector-push-extend (+ offset 1) quad-indices)
+      (vector-push-extend (+ offset 2) quad-indices)
       (vector-push-extend (+ offset 2) quad-indices)
       (vector-push-extend (+ offset 3) quad-indices)
+      (vector-push-extend (+ offset 0) quad-indices)
       (incf offset 4))))
 
 (defun draw-indexed (va count)
@@ -124,9 +124,9 @@
 		      :quad-va va
 		      :quad-vb vb
 		      :quad-ib ib
-		      :quad-vertex-positions (vector (cg:vec +0.5 +0.5 +0.5)
+		      :quad-vertex-positions (vector (cg:vec -0.5 -0.5 +0.5)
 						     (cg:vec +0.5 -0.5 +0.5)
-						     (cg:vec -0.5 -0.5 +0.5)
+						     (cg:vec +0.5 +0.5 +0.5)
 						     (cg:vec -0.5 +0.5 +0.5))
 		      :quad-shader shader
 		      :quad-count 0
@@ -252,9 +252,9 @@
 			   :color color)
 	 quad-vertex-data)))
 
-    (incf quad-index-count)
+    (incf quad-index-count 6)
     (incf quad-count)
-    (incf quad-vertex-count)))
+    (incf quad-vertex-count 4)))
 
 (defun draw-quad-at (x y z &optional color)
   (with-slots (quad-vb quad-vertex-data) *renderer*
@@ -280,7 +280,6 @@
   (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 0.0 1.0 0.0) *red*)
   (draw-quad-rotated (- +0.5 x) (- 0.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*)
   (draw-quad-rotated (- +0.5 x) (- 1.5 y) (- 0.5 z) 90 (cg:vec 1.0 0.0 0.0) *blue*))
-
 
 #|================================================================================|#
 #| Lines                                                                          |#
@@ -324,9 +323,9 @@
       (vector-push-extend (aref vs 1) quad-vertex-data)
       (vector-push-extend (aref vs 2) quad-vertex-data)
       (vector-push-extend (aref vs 3) quad-vertex-data)
-      (incf quad-index-count)
+      (incf quad-index-count 6)
       (incf quad-count)
-      (incf quad-vertex-count))))
+      (incf quad-vertex-count 4))))
 
 (defun draw-plane-points (p1 p2 p3)
   (draw-plane-normal (cg:cross-product (cg:vec- p2 p1) (cg:vec- p3 p1))))
