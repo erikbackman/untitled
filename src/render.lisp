@@ -9,10 +9,14 @@
 (defparameter *log* nil)
 (defun log! (msg) (when *log* (print msg)))
 
+(defparameter *origin* (sb-cga:vec 0.0 0.0 0.0))
+
 (defparameter *white* #(1.0 1.0 1.0 1.0))
 (defparameter *red* #(1.0 0.0 0.0 1.0))
 (defparameter *green* #(0.0 1.0 0.0 1.0))
 (defparameter *blue* #(0.0 0.0 1.0 1.0))
+(defparameter *cyan* #(0.0 1.0 1.0 0.4))
+(defparameter *faded* #(0.95 0.95 0.95 0.6))
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
@@ -104,8 +108,7 @@
 	 ;; Lines
 	 (lvb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :line-vertex))))
 	 (lva (make-instance 'vertex-array))
-	 (lshader (shader-from-file "shader.glsl"))
-	 )
+	 (lshader (shader-from-file "shader.glsl")))
 
 
     ;; Quads
@@ -149,7 +152,8 @@
 	 (view (camera-view *camera*)))
     (shader-set-mat4 shader "u_view" view)
     (shader-set-mat4 shader "u_proj" projection)
-    (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))))
+    (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
+    (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0)))
 
 (defun renderer-end-scene ()
   (renderer-flush))
@@ -211,21 +215,21 @@
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
-
+    
     (gl:clear :color-buffer-bit :depth-buffer-bit)
+
+    (with-slots (line-vertex-data line-vb line-va) *renderer*
+      (when (new-batch? line-vertex-data)
+	(upload-data line-vb line-vertex-data)
+	(draw-lines line-va 6)
+	(incf (renderer-draw-calls *renderer*))))
     
     (when (new-batch? quad-vertex-data)
       (with-slots (quad-index-count) *renderer*
 	(upload-data quad-vb quad-vertex-data)))
 
     (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
-    (incf (renderer-draw-calls *renderer*))
-
-    (with-slots (line-vertex-data line-vb line-va) *renderer*
-      (when (new-batch? line-vertex-data)
-	(upload-data line-vb line-vertex-data)
-	(draw-lines line-va 6)
-	(incf (renderer-draw-calls *renderer*))))))
+    (incf (renderer-draw-calls *renderer*))))
 
 (defun quad-index-count-maxed? (renderer)
   (with-slots (quad-index-count max-indices) renderer
@@ -287,3 +291,62 @@
     (let ((c (or color *white*)))
       (vector-push-extend (make-line-vertex :position p0 :color c) line-vertex-data)
       (vector-push-extend (make-line-vertex :position p1 :color c) line-vertex-data))))
+
+#|================================================================================|#
+#| Planes                                                                         |#
+#|================================================================================|#
+
+(defun plane-vertices (center normal tangent)
+  (let* ((Y (sb-cga:normalize (sb-cga:cross-product normal tangent)))
+	 (X (sb-cga:normalize (sb-cga:cross-product normal Y))))
+    (let* ((x (sb-cga:vec* X (/ (sb-cga:vec-length X) 2)))
+	   (y (sb-cga:vec* Y (/ (sb-cga:vec-length Y) 2)))
+	   (v1 (sb-cga:vec- (sb-cga:vec- center x) y))  ;; o - x - y (0)
+	   (v2 (sb-cga:vec+ (sb-cga:vec- center x) y))  ;; o - x + y (1)
+	   (v3 (sb-cga:vec+ (sb-cga:vec+ center x) y))  ;; o + x + y (2)
+	   (v4 (sb-cga:vec- (sb-cga:vec+ center x) y))  ;; o + x - y (3)
+	   ) 
+      `#(,v1 ,v2 ,v3 ,v4))))
+
+(defun plane (normal tangent &optional center)
+  (let ((vs (plane-vertices (or center *origin*) normal tangent))
+	(r (make-array 4 :fill-pointer 0))
+	(tr (cg:scale* 25.0 25.0 25.0)))
+    (do ((i 0 (+ i 1)))
+	((= i 4) r)
+      (vector-push
+       (make-quad-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
+
+(defun draw-plane-normal (normal &optional center)
+  (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
+    (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center)))
+      (vector-push-extend (aref vs 0) quad-vertex-data)
+      (vector-push-extend (aref vs 1) quad-vertex-data)
+      (vector-push-extend (aref vs 2) quad-vertex-data)
+      (vector-push-extend (aref vs 3) quad-vertex-data)
+      (incf quad-index-count)
+      (incf quad-count)
+      (incf quad-vertex-count))))
+
+(defun draw-plane-points (p1 p2 p3)
+  (draw-plane-normal (cg:cross-product (cg:vec- p2 p1) (cg:vec- p3 p1))))
+
+(defun draw-plane-expr (expr)
+  (draw-plane-normal (expr->normal expr)))
+
+(defun expr->normal (expr)
+  (let ((x 0.0)
+	(y 0.0)
+	(z 1.0))
+    (declare (type (single-float) x y z))
+    (loop with op = (elt expr 0)
+	  for e in (rest expr)
+	  for l = (length e)
+	  for k = (coerce (if (= 2 l) (elt e 0) 1) 'single-float)
+	  for a = (if (= 1 l) (elt e 0) (elt e 1))
+	  do (cond ((eq 'x a) (setf x k))
+		   ((eq 'y a) (setf y k))
+		   ((eq 'z a) (setf z k)))
+	  finally (return (sb-cga:vec (/ x z) z (- (/ y z)))))))
+
+
