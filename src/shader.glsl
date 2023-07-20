@@ -9,13 +9,14 @@ uniform mat4 u_MVP;
 uniform mat4 u_model;
 uniform mat4 u_proj;
 uniform mat4 u_view;
+uniform vec4 u_ambient;
 
 out vec4 my_color;
 
 void main()
 {
     gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
-    my_color = a_color;
+    my_color = a_color * u_ambient;
 }
 
 #shader fragment
