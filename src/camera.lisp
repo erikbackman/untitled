@@ -3,13 +3,13 @@
 (defparameter *camera* nil)
 
 (defstruct camera
-  (position (vec 0.1 0.1 0.1))
-  (front (vec 0.0 0.0 -1.0))
+  (position (vec -5.0 5.0 -12.0))
+  (front (vec 0.0 0.0 1.0))
   (up (vec 0.0 1.0 0.0))
   (right (vec 0.0 0.0 0.0))
   (world-up (vec 0.0 1.0 0.0))
-  (yaw -90.0)
-  (pitch 0.1)
+  (yaw 80.0)
+  (pitch -21.0)
   (speed 0.007)
   (sensitivity 0.1)
   (fov 45.0))
