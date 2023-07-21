@@ -1,10 +1,9 @@
 (in-package :untitled)
 
 (defun check-gl-error ()
-  (let ((err (gl:get-error)))
-    (loop while (not (eq :zero err))
-	  do (print err)
-	     (setf err (gl:get-error)))))
+  (do ((err (gl:get-error) (gl:get-error)))
+      ((eq :zero err))
+    (print err)))
 
 (defparameter *log* nil)
 (defun log! (msg) (when *log* (print msg)))
