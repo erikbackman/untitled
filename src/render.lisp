@@ -17,6 +17,8 @@
 (defparameter *blue* #(0.0 0.0 1.0 1.0))
 (defparameter *cyan* #(0.0 1.0 1.0 0.4))
 (defparameter *faded* #(0.95 0.95 0.95 0.6))
+(defparameter *black* #(0.0 0.0 0.0 1.0))
+(defparameter *dusk-blue* #(0.34 0.46 0.51 1.0))
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
@@ -54,6 +56,7 @@
   (line-vb)
   (line-shader)
   (line-vertex-data)
+  (line-count)
   
   (max-indices)
   (draw-calls))
@@ -141,6 +144,7 @@
 		      :line-vb lvb
 		      :line-shader lshader
 		      :line-vertex-data (make-array 0 :fill-pointer 0)
+		      :line-count 0
 		      
 		      :draw-calls 0))))
 
@@ -158,6 +162,9 @@
 
 (defun renderer-end-scene ()
   (renderer-flush))
+
+(defun renderer-set-clear-color (rgba)
+  (gl:clear-color (aref rgba 0) (aref rgba 1) (aref rgba 2) (aref rgba 3)))
 
 #|================================================================================|#
 #| Batching                                                                       |#
@@ -223,7 +230,7 @@
     (with-slots (line-vertex-data line-vb line-va) *renderer*
       (when (new-batch? line-vertex-data)
 	(upload-data line-vb line-vertex-data)
-	(draw-lines line-va 6)
+	(draw-lines line-va (* 2 (slot-value *renderer* 'line-count)))
 	(incf (renderer-draw-calls *renderer*))))
     
     (when (new-batch? quad-vertex-data)
@@ -288,10 +295,11 @@
 #|================================================================================|#
 
 (defun draw-line (p0 p1 &optional color)
-  (with-slots (line-vertex-data) *renderer*
+  (with-slots (line-vertex-data line-count) *renderer*
     (let ((c (or color *white*)))
       (vector-push-extend (make-line-vertex :position p0 :color c) line-vertex-data)
-      (vector-push-extend (make-line-vertex :position p1 :color c) line-vertex-data))))
+      (vector-push-extend (make-line-vertex :position p1 :color c) line-vertex-data))
+    (incf line-count)))
 
 #|================================================================================|#
 #| Planes                                                                         |#
@@ -399,4 +407,3 @@
 
 (defun draw-prism-at (x y z)
   (draw-prism-transform (matrix* (translate (vec x (+ y 0.0) (- z))))))
-
