@@ -247,12 +247,12 @@
     (when (quad-index-count-maxed? *renderer*)
       (next-batch))
 
-    (let ((vertex-count 4))
-      (loop for i from 0 below vertex-count do
-	(vector-push-extend
-	 (make-quad-vertex :position (cg:transform-point (aref quad-vertex-positions i) transform)
-			   :color color)
-	 quad-vertex-data)))
+    (dotimes (i 4)
+      (vector-push-extend
+       (make-quad-vertex
+	:position (cg:transform-point (aref quad-vertex-positions i) transform)
+	:color color)
+       quad-vertex-data))
 
     (incf quad-index-count 6)
     (incf quad-count)
