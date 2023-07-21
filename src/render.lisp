@@ -124,10 +124,11 @@
 		      :quad-va va
 		      :quad-vb vb
 		      :quad-ib ib
-		      :quad-vertex-positions (vector (cg:vec -0.5 -0.5 +0.5)
-						     (cg:vec +0.5 -0.5 +0.5)
-						     (cg:vec +0.5 +0.5 +0.5)
-						     (cg:vec -0.5 +0.5 +0.5))
+		      :quad-vertex-positions (vector
+					      (cg:vec -0.5 -0.5 +0.5)
+					      (cg:vec +0.5 -0.5 +0.5)
+					      (cg:vec +0.5 +0.5 +0.5)
+					      (cg:vec -0.5 +0.5 +0.5))
 		      :quad-shader shader
 		      :quad-count 0
 		      :quad-max-count max-quads
@@ -215,6 +216,7 @@
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
+    ;;(shader-set-mat4 quad-shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
     
     (gl:clear :color-buffer-bit :depth-buffer-bit)
 
@@ -328,7 +330,7 @@
       (incf quad-vertex-count 4))))
 
 (defun draw-plane-points (p1 p2 p3)
-  (draw-plane-normal (cg:cross-product (cg:vec- p2 p1) (cg:vec- p3 p1))))
+  (draw-plane-normal (cg:cross-product (cg:vec- p1 p2) (cg:vec- p1 p3))))
 
 (defun draw-plane-expr (expr)
   (draw-plane-normal (expr->normal expr)))
@@ -348,4 +350,53 @@
 		   ((eq 'z a) (setf z k)))
 	  finally (return (sb-cga:vec (/ x z) z (- (/ y z)))))))
 
+
+#|================================================================================|#
+#| Prisms                                                                         |#
+#|================================================================================|#
+
+;; Todo generate these for different prisms
+(defun draw-prism-transform (transform)
+  (let ((verts (vector
+		(vec -0.5 -0.5 +0.5)
+		(vec +0.5 -0.5 +0.5)
+		(vec +0.5 +0.5 +0.5)
+		(vec -0.5 +0.5 +0.5)
+
+		(vec +0.0 -0.5 -0.5)
+		(vec -0.5 -0.5 +0.5)
+		(vec -0.5 +0.5 +0.5)
+		(vec +0.0 +0.5 -0.5)
+
+		(vec +0.0 -0.5 -0.5)
+		(vec +0.5 -0.5 +0.5)
+		(vec +0.5 +0.5 +0.5)
+		(vec +0.0 +0.5 -0.5)
+
+		;; Should use a triangle-vertex buffer for top and bot?
+		(vec -0.5 +0.5 +0.5)
+		(vec +0.0 +0.5 +0.5)
+		(vec +0.0 +0.5 -0.5)
+		(vec +0.5 +0.5 +0.5)
+
+		(vec -0.5 -0.5 +0.5)
+		(vec +0.0 -0.5 +0.5)
+		(vec +0.0 -0.5 -0.5)
+		(vec +0.5 -0.5 +0.5))))
+    (with-slots (quad-vertex-data) *renderer*
+      (loop for v across verts
+	    do (vector-push-extend
+		(make-quad-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data)))
+    
+    (with-slots (quad-index-count quad-count quad-vertex-count) *renderer*
+      (incf quad-index-count 18)
+      (incf quad-count 3)
+      (incf quad-vertex-count 6)
+      ;; for top and bot
+      (incf quad-index-count 3)
+      (incf quad-count 2)
+      (incf quad-vertex-count 3))))
+
+(defun draw-prism-at (x y z)
+  (draw-prism-transform (matrix* (translate (vec x (+ y 0.0) (- z))))))
 
