@@ -20,6 +20,20 @@
     #( 1.3 -2.0 -2.5)
     ))
 
+(defparameter *pink* #(0.92 0.09 0.83 1.0))
+
+(defun draw-scene (time)
+  (render-batch
+    (draw-line (vec -25.0 0.0 0.0) (vec 25.0 0.0 0.0) *red*)
+    (draw-line (vec 0.0 0.0 -25.0) (vec 0.0 0.0 25.0) *green*)
+    (draw-line (vec 0.0 -25.0 0.0) (vec 0.0 25.0 0.0) *blue*)
+    (draw-plane-points (vec 0.0 0.0 0.0) (vec 1.0 0.0 0.0) (vec 1.0 1.0 1.0))
+		      
+    (draw-quad-rotated 0.0 0.49 0.0 90 (vec 1.0 0.0 0.0) *faded* 50.0 50.0)
+    (draw-cube -2.0 0.0 4.0)
+    (draw-line *origin* (vec (* 2 (cos time)) 5.0 (* 2 (sin time))) *pink*)
+    ))
+
 (defun main ()
   (unwind-protect
        (with-window (:title "untitled" :width *win-w* :height *win-h*
@@ -29,18 +43,7 @@
 	 (renderer-init)
 	 (renderer-begin-scene)
 	 (renderer-reset-stats)
-
-	 (render-batch
-	   (draw-cube -2.0 0.0 4.0)
-	   
-	   (draw-plane-points (vec 0.0 0.0 0.0) (vec 1.0 0.0 0.0) (vec 1.0 1.0 1.0))
-
-	   
-	   (draw-quad-rotated 0.0 0.49 0.0 90 (vec 1.0 0.0 0.0) *faded* 50.0 50.0)
-	   (draw-line (vec 0.0 -25.0 0.0) (vec 0.0 25.0 0.0) *blue*)
-	   (draw-line (vec -25.0 0.0 0.0) (vec 25.0 0.0 0.0) *red*)
-	   (draw-line (vec 0.0 0.0 -25.0) (vec 0.0 0.0 25.0) *green*)
-	   )
+	 (renderer-set-clear-color *dusk-blue*)
 
 	 (let ((time 0.0f0)
 	       (last-frame-time 0.0f0))
@@ -49,8 +52,10 @@
 		    (setf *timestep* (* (- time last-frame-time) 1000.0f0))
 		    (setf last-frame-time time)
 		 do
+		    (draw-scene time)
+		    
+		    (camera-handle-keyboard *camera*)		    
 		    (renderer-flush)
-		    (camera-handle-keyboard *camera*)
 		    (swap-buffers)
 		    (poll-events)))
 	 

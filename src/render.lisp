@@ -170,12 +170,19 @@
 #|================================================================================|#
 
 (defun begin-batch ()
-  (with-slots (quad-index-count quad-vertex-data quad-vertex-data-base) *renderer*
-    (setf (fill-pointer quad-vertex-data) 0)))
+  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base) *renderer*
+    (setf quad-index-count 0)
+    (setf quad-vertex-count 0)
+    (setf quad-count 0)
+    (setf (fill-pointer quad-vertex-data) 0))
+  (with-slots (line-vertex-data line-count) *renderer*
+    (setf line-count 0)
+    (setf (fill-pointer line-vertex-data) 0)))
 
 (defun next-batch ()
   (renderer-flush)
-  (begin-batch))
+  ;; (begin-batch)
+  )
 
 (defmacro render-batch (&body body)
   `(progn
@@ -187,10 +194,12 @@
   (plusp (fill-pointer vertex-data)))
 
 (defun shutdown ()
-  (with-slots (quad-ib quad-vb quad-va) *renderer*
+  (with-slots (quad-ib quad-vb quad-va line-vb line-va) *renderer*
     (gl:delete-buffers `(,(id quad-ib)
 			 ,(id quad-vb)
-			 ,(id quad-va)))))
+			 ,(id quad-va)
+			 ,(id line-va)
+			 ,(id line-va)))))
 
 (defun upload-data (buffer vertex-array)
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
@@ -219,25 +228,22 @@
     (unbind buffer)))
 
 (defun renderer-flush ()
-  (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib) *renderer*
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+  
+  (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib quad-index-count) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
-    ;;(shader-set-mat4 quad-shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
-    
-    (gl:clear :color-buffer-bit :depth-buffer-bit)
 
-    (with-slots (line-vertex-data line-vb line-va) *renderer*
-      (when (new-batch? line-vertex-data)
-	(upload-data line-vb line-vertex-data)
-	(draw-lines line-va (* 2 (slot-value *renderer* 'line-count)))
-	(incf (renderer-draw-calls *renderer*))))
-    
-    (when (new-batch? quad-vertex-data)
-      (with-slots (quad-index-count) *renderer*
-	(upload-data quad-vb quad-vertex-data)))
+    (when (plusp quad-index-count)
+      (upload-data quad-vb quad-vertex-data)
+      (draw-indexed quad-va quad-index-count)
+      (incf (renderer-draw-calls *renderer*))))
 
-    (draw-indexed quad-va (* (slot-value *renderer* 'quad-count) 6))
-    (incf (renderer-draw-calls *renderer*))))
+  (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
+    (when (plusp line-count)
+      (upload-data line-vb line-vertex-data)
+      (draw-lines line-va (* 2 line-count))
+      (incf (renderer-draw-calls *renderer*)))))
 
 (defun quad-index-count-maxed? (renderer)
   (with-slots (quad-index-count max-indices) renderer
