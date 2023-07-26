@@ -322,18 +322,18 @@
 	   ) 
       `#(,v1 ,v2 ,v3 ,v4))))
 
-(defun plane (normal tangent &optional center)
+(defun plane (normal tangent &optional center scale)
   (let ((vs (plane-vertices (or center *origin*) normal tangent))
 	(r (make-array 4 :fill-pointer 0))
-	(tr (cg:scale* 25.0 25.0 25.0)))
+	(tr (cg:scale scale)))
     (do ((i 0 (+ i 1)))
 	((= i 4) r)
       (vector-push
        (make-quad-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
 
-(defun draw-plane-normal (normal &optional center)
+(defun draw-plane-normal (normal &optional center (scale (vec 25.0 25.0 25.0)))
   (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
-    (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center)))
+    (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center scale)))
       (vector-push-extend (aref vs 0) quad-vertex-data)
       (vector-push-extend (aref vs 1) quad-vertex-data)
       (vector-push-extend (aref vs 2) quad-vertex-data)
