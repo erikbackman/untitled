@@ -222,3 +222,34 @@
      
      (aref m 3 3) 1)
     m))
+
+(defun rotationAlign (dir z)
+  (let* ((v (cg:cross-product z dir))
+	 (c (cg:dot-product z dir))
+	 (k (/ 1.0f0 (+ 1.0f0 c))))
+    (sb-cga:matrix
+     (+ (* (vec-x v) (vec-x v) k) c)
+     (- (* (vec-y v) (vec-x v) k) (vec-z v))
+     (+ (* (vec-z v) (vec-x v) k) (vec-y v))
+     0.0
+
+     (+ (* (vec-x v) (vec-y v) k) (vec-z v))
+     (+ (* (vec-y v) (vec-y v) k) c)
+     (- (* (vec-z v) (vec-y v) k) (vec-x v))
+     0.0
+
+     (- (* (vec-x v) (vec-z v) k) (vec-y v))
+     (+ (* (vec-y v) (vec-z v) k) (vec-x v))
+     (+ (* (vec-z v) (vec-z v) k) c)
+     0.0
+
+     0.0 0.0 0.0 1.0)))
+
+(defun look-at (eye center up)
+  (let* ((zaxis (cg:normalize (cg:vec- eye center)))
+	 (xaxis (cg:normalize (cg:cross-product up zaxis)))
+	 (yaxis (cg:cross-product zaxis xaxis)))
+    (cg:matrix (vec-x xaxis) (vec-x yaxis) (vec-z zaxis) 0.0f0
+	       (vec-y xaxis) (vec-y yaxis) (vec-y zaxis) 0.0f0
+	       (vec-z xaxis) (vec-z yaxis) (vec-z zaxis) 0.0f0
+	       (- (dot xaxis eye)) (- (dot yaxis eye)) (- (dot zaxis eye)) 1.0f0)))
