@@ -412,3 +412,22 @@
 
 (defun draw-prism-at (x y z)
   (draw-prism-transform (matrix* (translate (vec x (+ y 0.0) (- z))))))
+
+#|================================================================================|#
+#| Triangles                                                                      |#
+#|================================================================================|#
+
+(defun draw-triangle-transform (transform)
+  (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
+    (loop for v across (vector (vec -0.5 +0.5 +0.5)
+			       (vec +0.0 +0.5 +0.5)
+			       (vec +0.0 +0.5 -0.5)
+			       (vec +0.5 +0.5 +0.5))
+	  do (vector-push-extend
+	      (make-quad-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data))
+    (incf quad-index-count 6)
+    (incf quad-count)
+    (incf quad-vertex-count 6)))
+
+(defun draw-triangle-at (x y z)
+  (draw-triangle-transform (cg:translate* (- x 0.0) (- y 0.0) (- z 0.0))))
