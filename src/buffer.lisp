@@ -18,7 +18,8 @@
 (defclass vertex-buffer ()
   ((id :accessor id)
    (layout :accessor layout)
-   (data :accessor data :initform (make-array '(0) :fill-pointer 0 :adjustable t))))
+;;   (data :accessor data :initform (make-array '(0) :fill-pointer 0 :adjustable t))
+   ))
 
 (defmethod initialize-instance :after ((obj vertex-buffer) &key data (size (array-total-size data)))
   (with-slots (id) obj
