@@ -1,4 +1,4 @@
-(in-package :untitled)
+(in-package :g3)
 
 (defun check-gl-error ()
   (do ((err (gl:get-error) (gl:get-error)))
@@ -105,12 +105,12 @@
 	 (vb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :quad-vertex))))
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
-	 (shader (shader-from-file "shader.glsl"))
+	 (shader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Lines
 	 (lvb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :line-vertex))))
 	 (lva (make-instance 'vertex-array))
-	 (lshader (shader-from-file "shader.glsl")))
+	 (lshader (shader-from-file "shaders/shader.glsl")))
 
 
     ;; Quads

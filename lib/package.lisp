@@ -1,11 +1,7 @@
-#+sbcl
-(when (<= (floor (sb-ext:dynamic-space-size) (* 1024 1024 1024)) 1)
-  (error "Use sbcl --dynamic-space-size 4GB"))
-
-(defpackage :untitled
-  (:nicknames :ut)
-  (:use :cl :cl-glfw3 :trivial-main-thread)
+(defpackage :g3
+  (:use :cl :trivial-main-thread)
   (:local-nicknames (:cg :sb-cga))
+  (:import-from :cl-glfw3)
   (:import-from :cl-opengl)
   (:import-from :alexandria :switch :with-gensyms)
   (:import-from :trivia :match :defpattern :guard1)

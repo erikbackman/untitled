@@ -1,4 +1,4 @@
-(in-package :untitled)
+(in-package :g3)
 
 (defmacro ->> (value &optional form &rest more)
   (cond
