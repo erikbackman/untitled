@@ -102,16 +102,20 @@
 	 (max-indices (* 6 max-quads))
 
 	 ;; Quads
-	 (vb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :quad-vertex))))
+	 (vb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
 	 (shader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Lines
-	 (lvb (make-instance 'vertex-buffer :data #() :size (* max-vertices (size-of :line-vertex))))
+	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :line-vertex))))
 	 (lva (make-instance 'vertex-array))
 	 (lshader (shader-from-file "shaders/shader.glsl")))
 
+    (unbind vb)
+    (unbind va)
+    (unbind lvb)
+    (unbind lva)
 
     ;; Quads
     (add-vertex-buffer va vb (mk-buffer-layout '(:type (:float 3) :name "a_position")
@@ -224,10 +228,8 @@
 	     (loop for c across (slot-value vertex 'color)
 		   do (setf (gl:glaref glarray gl-index) c)
 		      (incf gl-index)))
-    (bind buffer)
     (gl:buffer-sub-data :array-buffer glarray :buffer-offset 0)
-    (gl:free-gl-array glarray)
-    (unbind buffer)))
+    (gl:free-gl-array glarray)))
 
 (defun renderer-flush ()
   (gl:clear :color-buffer-bit :depth-buffer-bit)
@@ -237,6 +239,8 @@
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
 
     (when (plusp quad-index-count)
+      (bind quad-vb)
+      (set-index-buffer quad-va quad-ib)
       (when (new-batch? quad-vertex-data)
 	(upload-data quad-vb quad-vertex-data))
       (draw-indexed quad-va quad-index-count)
@@ -244,6 +248,7 @@
 
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
     (when (plusp line-count)
+      (bind line-vb)
       (when (new-batch? line-vertex-data)
 	(upload-data line-vb line-vertex-data))
       (draw-lines line-va (* 2 line-count))
