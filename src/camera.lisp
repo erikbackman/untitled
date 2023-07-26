@@ -10,7 +10,7 @@
   (world-up (vec 0.0 1.0 0.0))
   (yaw 80.0)
   (pitch -21.0)
-  (speed 0.007)
+  (speed 0.010)
   (sensitivity 0.1)
   (fov 45.0))
 
@@ -24,14 +24,6 @@
 (defun camera-projection (camera aspect)
   (with-slots (fov) camera
     (mat4-perspective (deg->rad fov) aspect 0.1 100.0)))
-
-(defun camera-view-spinny (camera)
-  (with-slots (position front up sensitivity speed) camera
-    (mat4-look-at `#(,(* 10 (sin (* speed (glfw:get-time))))
-		     0.0
-		     ,(* 10 (cos (* speed (glfw:get-time)))))
-		  #(0 0 0)
-		  #(0 1 0))))
 
 (defmacro with-camera-position ((x y z) camera &body body)
   (let ((cam (gensym)))
