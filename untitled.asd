@@ -1,4 +1,4 @@
-(defsystem "untitled"
+(defsystem "g3"
   :version "0.1.0"
   :author "Erik Bäckman"
   :license "GPL-3"
@@ -8,7 +8,7 @@
 	       :cl-opengl
 	       :sb-cga
 	       :trivial-main-thread)
-  :components ((:module "src"
+  :components ((:module "lib"
                 :components
                 ((:file "package")
 		 (:file "array-utils")
@@ -19,7 +19,24 @@
 		 (:file "shader")
 		 (:file "buffer")
 		 (:file "window")
-		 (:file "render")
+		 (:file "render"))))
+  :build-operation "program-op"
+  :description "")
+
+(defsystem "untitled"
+  :version "0.1.0"
+  :author "Erik Bäckman"
+  :license "GPL-3"
+  :depends-on (:g3
+	       :alexandria
+	       :trivia
+	       :cl-glfw3
+	       :cl-opengl
+	       :sb-cga
+	       :trivial-main-thread)
+  :components ((:module "app"
+                :components
+                ((:file "package")
 		 (:file "main"))))
   :build-operation "program-op"
   :entry-point "untitled::main"

@@ -1,4 +1,4 @@
-(in-package :untitled)
+(in-package :g3)
 
 (defvar *shader-locations* (make-hash-table :test 'equal))
 

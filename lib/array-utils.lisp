@@ -1,4 +1,4 @@
-(in-package :untitled)
+(in-package :g3)
 
 (defmacro set-indicies (arr &body body)
   `(setf ,@(loop for i from 0 below (length body) by 2
