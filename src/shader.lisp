@@ -50,5 +50,8 @@
 (defun shader-set-float (shader name x &optional y z w)
   (gl:uniformf (shader-get-uniform shader name) x y z w))
 
+(defun shader-set-vec3 (shader name x y z)
+  (gl:uniformf (shader-get-uniform shader name) x y z))
+
 (defun shader-set-mat4 (shader name matrix)
   (gl:uniform-matrix-4fv (shader-get-uniform shader name) matrix))
