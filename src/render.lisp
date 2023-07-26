@@ -19,8 +19,8 @@
 (defparameter *black* #(0.0 0.0 0.0 1.0))
 (defparameter *dusk-blue* #(0.30 0.42 0.47 1.0))
 
-#|================================================================================|# 
-#| Renderer                                                                       |# 
+#|================================================================================|#
+#| Renderer                                                                       |#
 #|================================================================================|#
 
 (defparameter *renderer* nil)
@@ -56,7 +56,7 @@
   (line-shader)
   (line-vertex-data)
   (line-count)
-  
+
   (max-indices)
   (draw-calls))
 
@@ -97,7 +97,7 @@
 
 (defun renderer-init ()
   (setf *renderer* nil)
-  (let* ((max-quads 200)
+  (let* ((max-quads 10000)
 	 (max-vertices (* 4 max-quads))
 	 (max-indices (* 6 max-quads))
 
@@ -121,7 +121,7 @@
     ;; Lines
     (add-vertex-buffer lva lvb (mk-buffer-layout '(:type (:float 3) :name "a_position")
 						 '(:type (:float 4) :name "a_color")))
-    
+
     (setf *renderer* (make-renderer
 		      :quad-va va
 		      :quad-vb vb
@@ -144,7 +144,7 @@
 		      :line-shader lshader
 		      :line-vertex-data (make-array 0 :fill-pointer 0)
 		      :line-count 0
-		      
+
 		      :draw-calls 0))))
 
 (defun renderer-begin-scene ()
@@ -181,7 +181,9 @@
 
 (defun next-batch ()
   (renderer-flush)
-  ;; (begin-batch)
+  (setf (fill-pointer (renderer-quad-vertex-data *renderer*)) 0)
+  (setf (fill-pointer (renderer-line-vertex-data *renderer*)) 0)
+  ;;(begin-batch)
   )
 
 (defmacro render-batch (&body body)
@@ -229,19 +231,21 @@
 
 (defun renderer-flush ()
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-  
+
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib quad-index-count) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
 
     (when (plusp quad-index-count)
-      (upload-data quad-vb quad-vertex-data)
+      (when (new-batch? quad-vertex-data)
+	(upload-data quad-vb quad-vertex-data))
       (draw-indexed quad-va quad-index-count)
       (incf (renderer-draw-calls *renderer*))))
 
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
     (when (plusp line-count)
-      (upload-data line-vb line-vertex-data)
+      (when (new-batch? line-vertex-data)
+	(upload-data line-vb line-vertex-data))
       (draw-lines line-va (* 2 line-count))
       (incf (renderer-draw-calls *renderer*)))))
 
@@ -319,7 +323,7 @@
 	   (v2 (sb-cga:vec+ (sb-cga:vec- center x) y))  ;; o - x + y (1)
 	   (v3 (sb-cga:vec+ (sb-cga:vec+ center x) y))  ;; o + x + y (2)
 	   (v4 (sb-cga:vec- (sb-cga:vec+ center x) y))  ;; o + x - y (3)
-	   ) 
+	   )
       `#(,v1 ,v2 ,v3 ,v4))))
 
 (defun plane (normal tangent &optional center scale)
@@ -400,7 +404,7 @@
       (loop for v across verts
 	    do (vector-push-extend
 		(make-quad-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data)))
-    
+
     (with-slots (quad-index-count quad-count quad-vertex-count) *renderer*
       (incf quad-index-count 18)
       (incf quad-count 3)
