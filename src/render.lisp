@@ -17,7 +17,7 @@
 (defparameter *cyan* #(0.0 1.0 1.0 0.4))
 (defparameter *faded* #(0.95 0.95 0.95 0.6))
 (defparameter *black* #(0.0 0.0 0.0 1.0))
-(defparameter *dusk-blue* #(0.34 0.46 0.51 1.0))
+(defparameter *dusk-blue* #(0.30 0.42 0.47 1.0))
 
 #|================================================================================|# 
 #| Renderer                                                                       |# 
