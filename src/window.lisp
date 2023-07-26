@@ -10,24 +10,33 @@
 	*aspect* (/ width height))
   (gl:viewport 0 0 width height))
 
-(defun wireframe-mode () (gl:polygon-mode :front-and-back :line))
+(defparameter *polymode* :normal)
+
+(defun wireframe-mode ()
+  (gl:polygon-mode :front-and-back :line)
+  (setf *polymode* :wire))
+
+(defun fill-mode ()
+  (gl:polygon-mode :front-and-back :fill)
+  (setf *polymode* :normal))
+
+(defun toggle-mode ()
+  (if (eq *polymode* :normal) (wireframe-mode) (fill-mode)))
 
 (defun init-gl ()
-  ;; (wireframe-mode)
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0)
   (gl:clear-depth 1.0)
   (gl:matrix-mode :modelview)
   (gl:enable :multisample :depth-test)
+  (gl:depth-func :lequal)
+  (gl:depth-mask t)
   
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:enable :blend)
 
-  (gl:cull-face :back)
-  (gl:front-face :cw)
-  (gl:depth-mask t)
-  
-  (gl:depth-func :lequal)
+  ;;(gl:cull-face :front)
+  ;;(gl:front-face :cw)
   (gl:disable :cull-face) ;; disable for now
 
   (gl:line-width 3.0)
@@ -44,6 +53,7 @@
 (def-key-callback handle-key-input (window key scancode action mod-keys)
   (declare (ignore window scancode mod-keys))
   (when (eq key :escape) (glfw:set-window-should-close))
+  (when (and (eq key :m) (eq action :press)) (toggle-mode))
   (case action
     (:press (set-key-state key t))
     (:release (set-key-state key nil))))
@@ -63,10 +73,10 @@
 (def-cursor-pos-callback handle-mouse-movement (window x y)
   (declare (ignore window))
   (when (keydown? :mleft)
-    (when *first-mouse*
-      (setf *last-x* x
-	    *last-y* y
-	    *first-mouse* nil))
+    ;; (when *first-mouse*
+    ;;   (setf *last-x* x
+    ;; 	    *last-y* y
+    ;; 	    *first-mouse* nil))
    
    (let ((xoffset (- x *last-x*))
 	 (yoffset (- *last-y* y)))
