@@ -4,6 +4,7 @@
 (defconstant +pi/4+ 0.785398)
 (defconstant +pi/3+ 1.047197)
 (defconstant +pi/2+ 1.570796)
+(defconstant +pi+   3.141592)
 (defconstant +2pi+  6.283185)
 (defconstant +pi/180+ 0.017453)
 
