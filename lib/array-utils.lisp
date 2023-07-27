@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defmacro set-indicies (arr &body body)
   `(setf ,@(loop for i from 0 below (length body) by 2

@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defparameter *camera* nil)
 

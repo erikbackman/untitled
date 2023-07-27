@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defun check-gl-error ()
   (do ((err (gl:get-error) (gl:get-error)))

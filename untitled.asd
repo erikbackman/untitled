@@ -1,4 +1,4 @@
-(defsystem "g3"
+(defsystem "g3d"
   :version "0.1.0"
   :author "Erik Bäckman"
   :license "GPL-3"
@@ -27,7 +27,7 @@
   :version "0.1.0"
   :author "Erik Bäckman"
   :license "GPL-3"
-  :depends-on (:g3
+  :depends-on (:g3d
 	       :alexandria
 	       :trivia
 	       :cl-glfw3

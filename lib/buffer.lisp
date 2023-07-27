@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defun alloc-gl-array (data size target)
   (let ((arr (gl:alloc-gl-array :float size)))

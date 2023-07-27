@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defconstant +pi/6+ 0.523598)
 (defconstant +pi/4+ 0.785398)
