@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defmacro ->> (value &optional form &rest more)
   (cond

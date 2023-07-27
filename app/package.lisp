@@ -7,7 +7,7 @@
   (:use :cl :trivial-main-thread)
   (:local-nicknames (:cg :sb-cga))
   (:import-from :cl-glfw3 :set-window-size-callback :set-key-callback)
-  (:import-from :g3
+  (:import-from :g3d
    :with-window :poll-events :renderer-reset-stats
    :renderer-init :renderer-begin-scene :renderer-set-clear-color
    :render-batch :handle-key-input :handle-mouse-movement

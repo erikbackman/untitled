@@ -1,4 +1,4 @@
-(defpackage :g3
+(defpackage :g3d
   (:use :cl :trivial-main-thread)
   (:local-nicknames (:cg :sb-cga))
   (:import-from :cl-glfw3)

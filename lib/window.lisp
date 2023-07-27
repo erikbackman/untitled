@@ -1,4 +1,4 @@
-(in-package :g3)
+(in-package :g3d)
 
 (defparameter *win-w* 800)
 (defparameter *win-h* 600)
@@ -78,13 +78,13 @@
     ;; 	    *last-y* y
     ;; 	    *first-mouse* nil))
    
-   (let ((xoffset (- x *last-x*))
-	 (yoffset (- *last-y* y)))
+    (let ((xoffset (- x *last-x*))
+	  (yoffset (- *last-y* y)))
 
-     (setf *last-x* x)
-     (setf *last-y* y)
+      (setf *last-x* x)
+      (setf *last-y* y)
      
-     (camera-handle-mouse-movement *camera* xoffset yoffset))))
+      (camera-handle-mouse-movement *camera* xoffset yoffset))))
 
 
 (defun poll-events () (glfw:poll-events))

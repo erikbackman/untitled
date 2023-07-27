@@ -1,6 +1,6 @@
 (defpackage untitled/tests/main
   (:use :cl :rove)
-  (:import-from :g3
+  (:import-from :g3d
    :mk-buffer-layout
    :matrix**
    :vec-cross
