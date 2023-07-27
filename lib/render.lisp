@@ -523,14 +523,21 @@
 	    ))))
     verts))
 
+(defparameter +unit-sphere-vertex-count+ 100)
+(defparameter +unit-sphere+ (sphere 1 +unit-sphere-vertex-count+))
+
 (defun draw-sphere (radius)
-  (let* ((vertex-count 100)
-	 (globe (sphere radius vertex-count)))
+  (let* ((vertex-count +unit-sphere-vertex-count+)
+	 (globe (sphere 1.0 vertex-count))
+	 (trans (cg:scale* radius radius radius)))
     (with-slots (sphere-vertex-data sphere-index-count) *renderer*
       (dotimes (i vertex-count)
 	(dotimes (j (+ vertex-count 1))
 	  (let ((v1 (aref globe i j))
 		(v2 (aref globe (+ 1 i) j)))
-	    (vector-push-extend (make-quad-vertex :position v1 :color *red*) sphere-vertex-data)
-	    (vector-push-extend (make-quad-vertex :position v2 :color *red*) sphere-vertex-data))))
+	    (vector-push-extend
+	     (make-quad-vertex :position (cg:transform-point v1 trans) :color *red*) sphere-vertex-data)
+	    (vector-push-extend
+	     (make-quad-vertex :position (cg:transform-point v2 trans) :color *red*) sphere-vertex-data))))
       (incf sphere-index-count (* 6 (array-total-size globe))))))
+
