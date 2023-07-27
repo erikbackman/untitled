@@ -11,7 +11,7 @@
    :with-window :poll-events :renderer-reset-stats
    :renderer-init :renderer-begin-scene :renderer-set-clear-color
    :render-batch :handle-key-input :handle-mouse-movement
-   :draw-quad-rotated :draw-cube :draw-plane-points :draw-line
+   :draw-quad-rotated :draw-cube :draw-plane-points :draw-plane-normal :draw-line
    :renderer-flush :swap-buffers :shutdown
    :camera-handle-keyboard :*camera* :*timestep*
    :draw-sphere)

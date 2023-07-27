@@ -25,9 +25,9 @@
     (draw-line (vec 0.0 -25.0 0.0) (vec 0.0 25.0 0.0) *blue*)
 
     (draw-cube -6.0 0.0 6.0)
-    (draw-sphere 4)
-    (draw-plane-points (vec 0.0 0.0 0.0) (vec 1.0 0.0 0.0) (vec 1.0 1.0 1.0))
-
+    (draw-sphere 5.0)
+;;    (draw-plane-points (vec 0.0 0.0 0.0) (vec 1.0 0.0 0.0) (vec 1.0 1.0 1.0))
+    (draw-plane-normal (vec -1.0 1.0 1.0))
     (draw-quad-rotated 0.0 0.49 0.0 90 (vec 1.0 0.0 0.0) *color1* 50.0 50.0)))
 
 ;; TODO: Shouldn't depend on glfw.
