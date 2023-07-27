@@ -37,7 +37,7 @@
 
   ;;(gl:cull-face :front)
   ;;(gl:front-face :cw)
-  (gl:disable :cull-face) ;; disable for now
+  ;;(gl:disable :cull-face) ;; disable for now
 
   (gl:line-width 3.0)
   (gl:enable :line-smooth)
@@ -72,20 +72,16 @@
 (declaim (ftype (function (sb-sys:system-area-pointer single-float single-float) nil)))
 (glfw:def-cursor-pos-callback handle-mouse-movement (window x y)
   (declare (ignore window))
-  (when (keydown? :mleft)
-    ;; (when *first-mouse*
-    ;;   (setf *last-x* x
-    ;; 	    *last-y* y
-    ;; 	    *first-mouse* nil))
-   
-    (let ((xoffset (- x *last-x*))
-	  (yoffset (- *last-y* y)))
-
-      (setf *last-x* x)
-      (setf *last-y* y)
-     
-      (camera-handle-mouse-movement *camera* xoffset yoffset))))
-
+  (when *first-mouse*
+    (setf *last-x* x)
+    (setf *last-y* y)
+    (setf *first-mouse* nil))
+  (let ((xoffset (- x *last-x*))
+	(yoffset (- *last-y* y)))
+    (when (keydown? :mleft)
+      (camera-handle-mouse-movement *camera* xoffset yoffset)))
+  (setf *last-x* x)
+  (setf *last-y* y))
 
 (defun poll-events () (glfw:poll-events))
 (defun swap-buffers () (glfw:swap-buffers))
