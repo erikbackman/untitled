@@ -13,7 +13,8 @@
    :render-batch :handle-key-input :handle-mouse-movement
    :draw-quad-rotated :draw-cube :draw-plane-points :draw-line
    :renderer-flush :swap-buffers :shutdown
-   :camera-handle-keyboard :*camera* :*timestep*)
+   :camera-handle-keyboard :*camera* :*timestep*
+   :draw-sphere)
 ;;  (:import-from :cl-opengl)
   (:import-from :alexandria :switch :with-gensyms)
   (:import-from :trivia :match :defpattern :guard1)
