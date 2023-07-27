@@ -38,6 +38,10 @@
   (position (cg:vec 0.0 0.0 0.0))
   (color #(1.0 1.0 1.0 1.0)))
 
+(defstruct sphere-vertex
+  (position (cg:vec 0.0 0.0 0.0))
+  (color #(1.0 1.0 1.0 1.0)))
+
 (defstruct renderer
   (quad-va)
   (quad-vb)
@@ -56,6 +60,15 @@
   (line-shader)
   (line-vertex-data)
   (line-count)
+
+  (sphere-va)
+  (sphere-vb)
+  (sphere-ib)
+  (sphere-vertex-data)
+  (sphere-vertex-positions)
+  (sphere-shader)
+  (sphere-indices)
+  (sphere-index-count)
 
   (max-indices)
   (draw-calls))
@@ -86,6 +99,16 @@
       (vector-push-extend (+ offset 0) quad-indices)
       (incf offset 4))))
 
+(defun make-sphere-indices (n)
+  (let ((indices (make-array 0 :fill-pointer 0))
+	(offset 0))
+    (dotimes (i n)
+      (vector-push-extend (+ offset 0) indices)
+      (vector-push-extend (+ offset 1) indices)
+      (vector-push-extend (+ offset 2) indices)
+      (incf offset 1))
+    indices))
+
 (defun draw-indexed (va count)
   (bind va)
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-int)
@@ -110,12 +133,20 @@
 	 ;; Lines
 	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :line-vertex))))
 	 (lva (make-instance 'vertex-array))
-	 (lshader (shader-from-file "shaders/shader.glsl")))
+	 (lshader (shader-from-file "shaders/shader.glsl"))
+
+	 ;; Sphere
+	 (svb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
+	 (sib (make-instance 'index-buffer :data (make-sphere-indices max-indices)))
+	 (sva (make-instance 'vertex-array))
+	 (sshader (shader-from-file "shaders/shader.glsl")))
 
     (unbind vb)
     (unbind va)
     (unbind lvb)
     (unbind lva)
+    (unbind svb)
+    (unbind sva)
 
     ;; Quads
     (add-vertex-buffer va vb (mk-buffer-layout '(:type (:float 3) :name "a_position")
@@ -125,6 +156,11 @@
     ;; Lines
     (add-vertex-buffer lva lvb (mk-buffer-layout '(:type (:float 3) :name "a_position")
 						 '(:type (:float 4) :name "a_color")))
+
+    ;; Spheres
+    (add-vertex-buffer sva svb (mk-buffer-layout '(:type (:float 3) :name "a_position")
+						 '(:type (:float 4) :name "a_color")))
+    ;;(set-index-buffer sva sib)
 
     (setf *renderer* (make-renderer
 		      :quad-va va
@@ -142,6 +178,13 @@
 		      :max-indices max-indices
 		      :quad-index-count 0
 		      :quad-vertex-count 0
+
+		      :sphere-va sva
+		      :sphere-vb svb
+		      :sphere-ib sib
+		      :sphere-shader sshader
+		      :sphere-vertex-data (make-array 0 :fill-pointer 0)
+		      :sphere-index-count 0
 
 		      :line-va lva
 		      :line-vb lvb
@@ -174,11 +217,15 @@
 #|================================================================================|#
 
 (defun begin-batch ()
-  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base) *renderer*
+  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base)
+      *renderer*
     (setf quad-index-count 0)
     (setf quad-vertex-count 0)
     (setf quad-count 0)
     (setf (fill-pointer quad-vertex-data) 0))
+  (with-slots (sphere-index-count sphere-vertex-data) *renderer*
+    (setf sphere-index-count 0)
+    (setf (fill-pointer sphere-vertex-data) 0))
   (with-slots (line-vertex-data line-count) *renderer*
     (setf line-count 0)
     (setf (fill-pointer line-vertex-data) 0)))
@@ -187,6 +234,7 @@
   (renderer-flush)
   (setf (fill-pointer (renderer-quad-vertex-data *renderer*)) 0)
   (setf (fill-pointer (renderer-line-vertex-data *renderer*)) 0)
+  (setf (fill-pointer (renderer-sphere-vertex-data *renderer*)) 0)
   ;;(begin-batch)
   )
 
@@ -200,14 +248,18 @@
   (plusp (fill-pointer vertex-data)))
 
 (defun shutdown ()
-  (with-slots (quad-ib quad-vb quad-va line-vb line-va) *renderer*
+  (with-slots (quad-ib quad-vb quad-va line-vb line-va sphere-ib sphere-vb sphere-va) *renderer*
     (gl:delete-buffers `(,(id quad-ib)
 			 ,(id quad-vb)
 			 ,(id quad-va)
 			 ,(id line-va)
-			 ,(id line-va)))))
+			 ,(id line-va)
+			 ,(id sphere-ib)
+			 ,(id sphere-vb)
+			 ,(id sphere-va)))))
 
 (defun upload-data (buffer vertex-array)
+  (declare (ignore buffer))
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
 (:position #(x y z w) :color (r g b a))."
   ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
@@ -234,18 +286,31 @@
 (defun renderer-flush ()
   (gl:clear :color-buffer-bit :depth-buffer-bit)
 
+  (with-slots (sphere-vb sphere-va sphere-shader sphere-vertex-data sphere-ib sphere-index-count) *renderer*
+    (when (plusp sphere-index-count)
+      (bind sphere-vb)
+      (bind sphere-va)
+      (set-index-buffer sphere-va sphere-ib)
+      (when (new-batch? sphere-vertex-data)
+	(upload-data sphere-vb sphere-vertex-data))
+      (draw-indexed sphere-va sphere-index-count)
+      (unbind sphere-va)
+      (incf (renderer-draw-calls *renderer*))))
+  
   (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib quad-index-count) *renderer*
     (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
     (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
-
     (when (plusp quad-index-count)
       (bind quad-vb)
+      (bind quad-va)
       (set-index-buffer quad-va quad-ib)
       (when (new-batch? quad-vertex-data)
 	(upload-data quad-vb quad-vertex-data))
       (draw-indexed quad-va quad-index-count)
+      (unbind quad-va)
+      (unbind quad-ib)
       (incf (renderer-draw-calls *renderer*))))
-
+  
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
     (when (plusp line-count)
       (bind line-vb)
@@ -440,3 +505,32 @@
 
 (defun draw-triangle-at (x y z)
   (draw-triangle-transform (cg:translate* (- x 0.0) (- y 0.0) (- z 0.0))))
+
+#|================================================================================|#
+#| Sphers                                                                         |#
+#|================================================================================|#
+
+(defun sphere (r p)
+  (let ((verts (make-array `(,(+ p 1) ,(+ p 1)))))
+    (dotimes (i (+ p 1))
+      (let ((lat (linear-map i 0 p (- +pi/2+) +pi/2+)))
+	(dotimes (j (+ p 1))
+	  (let* ((lon (linear-map j 0 p (- +pi+) +pi+))
+		 (x (* r (sin lon) (cos lat)))
+		 (y (* r (sin lon) (sin lat)))
+		 (z (* r (cos lon))))
+	    (setf (aref verts i j) (vec x y z))
+	    ))))
+    verts))
+
+(defun draw-sphere (radius)
+  (let* ((vertex-count 100)
+	 (globe (sphere radius vertex-count)))
+    (with-slots (sphere-vertex-data sphere-index-count) *renderer*
+      (dotimes (i vertex-count)
+	(dotimes (j (+ vertex-count 1))
+	  (let ((v1 (aref globe i j))
+		(v2 (aref globe (+ 1 i) j)))
+	    (vector-push-extend (make-quad-vertex :position v1 :color *red*) sphere-vertex-data)
+	    (vector-push-extend (make-quad-vertex :position v2 :color *red*) sphere-vertex-data))))
+      (incf sphere-index-count (* 6 (array-total-size globe))))))

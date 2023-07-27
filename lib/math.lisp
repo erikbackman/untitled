@@ -254,3 +254,11 @@
 	       (vec-y xaxis) (vec-y yaxis) (vec-y zaxis) 0.0f0
 	       (vec-z xaxis) (vec-z yaxis) (vec-z zaxis) 0.0f0
 	       (- (dot xaxis eye)) (- (dot yaxis eye)) (- (dot zaxis eye)) 1.0f0)))
+
+(defun lerp (min max point)
+  (declare (type single-float min max point))
+  (+ min (* (- max min) point)))
+
+(defun linear-map (x old-min old-max new-min new-max)
+  (+ new-min (* (- x old-min) (/ (- new-max new-min)
+				 (- old-max old-min)))))
