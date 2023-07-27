@@ -524,7 +524,7 @@
     verts))
 
 (defparameter *unit-sphere-vertex-count* 100)
-(defparameter *unit-sphere* (sphere 1 +unit-sphere-vertex-count+))
+(defparameter *unit-sphere* (sphere 1 *unit-sphere-vertex-count*))
 
 (defun draw-sphere (radius)
   (let* ((vertex-count *unit-sphere-vertex-count*)
