@@ -83,14 +83,11 @@
 Example:
  (mk-buffer-layout '(:type (:float 3) :name \"a_position\")
                    '(:type (:float 4) :name \"a_color\"))."
-  (loop for e in attributes
-	for (base-type count) = (getf e :type)
-	for name = (getf e :name)
-	for size = (shader-data-size base-type count)
-	sum size into stride
-	collect `(:name ,name :count ,count :type ,base-type :offset ,offset) into result-elems
-	sum size into offset
-	finally (return `(:stride ,stride :elements ,result-elems))))
+  (loop for a in attributes
+	for (base-type count) = (getf a :type)
+	collect `(:name ,(getf a :name) :count ,count :type ,base-type :offset ,offset) into elements
+	sum (shader-data-size base-type count) into offset
+	finally (return `(:stride ,offset :elements ,elements))))
 
 #|================================================================================|# 
 #| Vertex Array                                                                   |# 
