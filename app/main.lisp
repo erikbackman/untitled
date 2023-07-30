@@ -17,16 +17,14 @@
 (defparameter *e2* (vec 0.0 1.0 0.0))
 (defparameter *e3* (vec 0.0 0.0 1.0))
 
-(defun draw-scene (time)
+(defun setup-scene (time)
   (declare (ignorable time))
-  (render-batch
+  (renderer-begin-scene
     (draw-line (vec -25.0 0.0 0.0) (vec 25.0 0.0 0.0) *red*)
     (draw-line (vec 0.0 0.0 -25.0) (vec 0.0 0.0 25.0) *green*)
     (draw-line (vec 0.0 -25.0 0.0) (vec 0.0 25.0 0.0) *blue*)
-
     (draw-cube -6.0 0.0 6.0)
     (draw-sphere 5.0)
-;;    (draw-plane-points (vec 0.0 0.0 0.0) (vec 1.0 0.0 0.0) (vec 1.0 1.0 1.0))
     (draw-plane-normal (vec -1.0 1.0 1.0))
     (draw-quad-rotated 0.0 0.49 0.0 90 (vec 1.0 0.0 0.0) *color1* 50.0 50.0)))
 
@@ -38,11 +36,10 @@
 		     :on-keyboard 'handle-key-input)
 	 
 	 (renderer-init)
-	 (renderer-begin-scene)
+	 (setup-scene nil)
 	 (renderer-reset-stats)
 	 (renderer-set-clear-color *dusk-blue*)
-	 (draw-scene nil)
-
+	 
 	 (let ((time 0.0f0)
 	       (last-frame-time 0.0f0))
 	   (loop until (glfw:window-should-close-p)
@@ -50,8 +47,8 @@
 		    (setf *timestep* (* (- time last-frame-time) 1000.0f0))
 		    (setf last-frame-time time)
 		 do
-		    (camera-handle-keyboard *camera*)		    
-		    (renderer-flush)
+		    (renderer-present)
+		    (camera-handle-keyboard *camera*)
 		    (glfw:swap-buffers)
 		    (glfw:poll-events)))
 	 

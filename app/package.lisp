@@ -12,9 +12,10 @@
    :renderer-init :renderer-begin-scene :renderer-set-clear-color
    :render-batch :handle-key-input :handle-mouse-movement
    :draw-quad-rotated :draw-cube :draw-plane-points :draw-plane-normal :draw-line
-   :renderer-flush :swap-buffers :shutdown
+   :swap-buffers :shutdown :renderer-present
    :camera-handle-keyboard :*camera* :*timestep*
-   :draw-sphere)
+   :draw-sphere :renderer
+   :shader-set-mat4 :shader-get-uniform :*renderer* :renderer-get-shader :sphere-shader :quad-shader)
 ;;  (:import-from :cl-opengl)
   (:import-from :alexandria :switch :with-gensyms)
   (:import-from :trivia :match :defpattern :guard1)
