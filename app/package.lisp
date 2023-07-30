@@ -10,7 +10,7 @@
   (:import-from :g3d
    :with-window :poll-events :renderer-reset-stats
    :renderer-init :renderer-begin-scene :renderer-set-clear-color
-   :render-batch :handle-key-input :handle-mouse-movement
+   :handle-key-input :handle-mouse-movement
    :draw-quad-rotated :draw-cube :draw-plane-points :draw-plane-normal :draw-line
    :swap-buffers :shutdown :renderer-present
    :camera-handle-keyboard :*camera* :*timestep*
