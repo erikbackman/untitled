@@ -264,15 +264,6 @@
 (defmacro renderer-begin-scene (&body draw-calls)
   `(progn
      (gl:clear :color-buffer-bit :depth-buffer-bit)
-     (let* ((shader (renderer-quad-shader *renderer*))
-	    (fov (camera-fov *camera*))
-	    (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
-	    (view (camera-view *camera*)))
-       (gl:use-program shader)
-       (shader-set-mat4 shader "u_view" view)
-       (shader-set-mat4 shader "u_proj" projection)
-       (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
-       (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0))
      (begin-batch)
      ,@draw-calls
      (next-batch)))
