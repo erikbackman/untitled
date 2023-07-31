@@ -27,18 +27,7 @@
 
 (defparameter *max-quads* 40)
 
-(defstruct quad-vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
-
-(defun quad-vertex-array? (array)
-  (every #'quad-vertex-p array))
-
-(defstruct line-vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
-
-(defstruct sphere-vertex
+(defstruct vertex
   (position (cg:vec 0.0 0.0 0.0))
   (color #(1.0 1.0 1.0 1.0)))
 
@@ -79,8 +68,7 @@
     (:vec3 12)
     (:vec4 16)
     (:mat4 64)
-    (:quad-vertex 28)
-    (:line-vertex 28)))
+    (:vertex 28)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -118,28 +106,31 @@
   (bind va)
   (gl:draw-arrays :lines 0 count))
 
+(defun renderer-get-shader (shader)
+  (slot-value *renderer* shader))
+
 (defun renderer-init ()
   (setf *renderer* nil)
   (let* ((max-quads 10000)
 	 (max-vertices (* 4 max-quads))
 	 (max-indices (* 6 max-quads))
-
+	 
 	 ;; Quads
-	 (vb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
+	 (vb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
 	 (shader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Lines
-	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :line-vertex))))
+	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (lva (make-instance 'vertex-array))
 	 (lshader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Sphere
-	 (svb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
+	 (svb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (sib (make-instance 'index-buffer :data (make-sphere-indices max-indices)))
 	 (sva (make-instance 'vertex-array))
-	 (sshader (shader-from-file "shaders/shader.glsl")))
+	 (sshader (shader-from-file "shaders/sphere-shader.glsl")))
 
     (unbind vb)
     (unbind va)
@@ -194,70 +185,12 @@
 
 		      :draw-calls 0))))
 
-(defun renderer-begin-scene ()
-  (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (gl:use-program (renderer-quad-shader *renderer*))
-  (let* ((shader (renderer-quad-shader *renderer*))
-	 (fov (camera-fov *camera*))
-	 (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
-	 (view (camera-view *camera*)))
-    (shader-set-mat4 shader "u_view" view)
-    (shader-set-mat4 shader "u_proj" projection)
-    (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
-    (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0)))
-
-(defun renderer-end-scene ()
-  (renderer-flush))
-
 (defun renderer-set-clear-color (rgba)
   (gl:clear-color (aref rgba 0) (aref rgba 1) (aref rgba 2) (aref rgba 3)))
 
 #|================================================================================|#
 #| Batching                                                                       |#
 #|================================================================================|#
-
-(defun begin-batch ()
-  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base)
-      *renderer*
-    (setf quad-index-count 0)
-    (setf quad-vertex-count 0)
-    (setf quad-count 0)
-    (setf (fill-pointer quad-vertex-data) 0))
-  (with-slots (sphere-index-count sphere-vertex-data) *renderer*
-    (setf sphere-index-count 0)
-    (setf (fill-pointer sphere-vertex-data) 0))
-  (with-slots (line-vertex-data line-count) *renderer*
-    (setf line-count 0)
-    (setf (fill-pointer line-vertex-data) 0)))
-
-(defun next-batch ()
-  (renderer-flush)
-  (setf (fill-pointer (renderer-quad-vertex-data *renderer*)) 0)
-  (setf (fill-pointer (renderer-line-vertex-data *renderer*)) 0)
-  (setf (fill-pointer (renderer-sphere-vertex-data *renderer*)) 0)
-  ;;(begin-batch)
-  )
-
-(defmacro render-batch (&body body)
-  `(progn
-     (begin-batch)
-     ,@body
-     (next-batch)))
-
-(defun new-batch? (vertex-data)
-  (plusp (fill-pointer vertex-data)))
-
-(defun shutdown ()
-  (with-slots (quad-ib quad-vb quad-va line-vb line-va sphere-ib sphere-vb sphere-va) *renderer*
-    (gl:delete-buffers `(,(id quad-ib)
-			 ,(id quad-vb)
-			 ,(id quad-va)
-			 ,(id line-va)
-			 ,(id line-va)
-			 ,(id sphere-ib)
-			 ,(id sphere-vb)
-			 ,(id sphere-va)))))
-
 (defun upload-data (buffer vertex-array)
   (declare (ignore buffer))
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
@@ -283,29 +216,88 @@
     (gl:buffer-sub-data :array-buffer glarray :buffer-offset 0)
     (gl:free-gl-array glarray)))
 
-(defun renderer-flush ()
-  (gl:clear :color-buffer-bit :depth-buffer-bit)
+(defun new-batch? (vertex-data)
+  (plusp (fill-pointer vertex-data)))
 
-  (with-slots (sphere-vb sphere-va sphere-shader sphere-vertex-data sphere-ib sphere-index-count) *renderer*
+(defun renderer-flush ()
+  (with-slots (sphere-vertex-data sphere-va sphere-vb) *renderer*
+    (when (new-batch? sphere-vertex-data)
+      (bind sphere-vb)
+      (bind sphere-va)
+      (upload-data sphere-vb sphere-vertex-data)
+      (unbind sphere-vb)
+      (unbind sphere-va)))
+  (with-slots (quad-vertex-data quad-va quad-vb) *renderer*
+    (when (new-batch? quad-vertex-data)
+      (bind quad-vb)
+      (bind quad-va)
+      (upload-data quad-vb quad-vertex-data)
+      (unbind quad-vb)
+      (unbind quad-va)))
+  (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
+    (bind line-vb)
+    (when (new-batch? line-vertex-data)
+      (upload-data line-vb line-vertex-data))))
+
+(defun begin-batch ()
+  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base)
+      *renderer*
+    (setf quad-index-count 0)
+    (setf quad-vertex-count 0)
+    (setf quad-count 0)
+    (setf (fill-pointer quad-vertex-data) 0))
+  (with-slots (sphere-index-count sphere-vertex-data) *renderer*
+    (setf sphere-index-count 0)
+    (setf (fill-pointer sphere-vertex-data) 0))
+  (with-slots (line-vertex-data line-count) *renderer*
+    (setf line-count 0)
+    (setf (fill-pointer line-vertex-data) 0)))
+
+(defun next-batch ()
+  (renderer-flush)
+  (setf (fill-pointer (renderer-quad-vertex-data *renderer*)) 0)
+  (setf (fill-pointer (renderer-line-vertex-data *renderer*)) 0)
+  (setf (fill-pointer (renderer-sphere-vertex-data *renderer*)) 0)
+  ;;(begin-batch)
+  )
+
+(defmacro renderer-begin-scene (&body draw-calls)
+  `(progn
+     (gl:clear :color-buffer-bit :depth-buffer-bit)
+     (begin-batch)
+     ,@draw-calls
+     (next-batch)))
+
+;; TODO Uniform shader for camera
+(defun set-common-uniforms (shader)
+  (shader-set-mat4 shader "u_view" (camera-view *camera*))
+  (shader-set-mat4 shader "u_proj" (camera-projection *camera* *aspect*))
+  (shader-set-mat4 shader "u_model" (cg:translate* 0.0 0.0 0.0))
+  (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0))
+
+(defun renderer-present ()
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+  (with-slots (camera-shader sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
     (when (plusp sphere-index-count)
       (bind sphere-vb)
       (bind sphere-va)
+      (bind sphere-ib)
       (set-index-buffer sphere-va sphere-ib)
-      (when (new-batch? sphere-vertex-data)
-	(upload-data sphere-vb sphere-vertex-data))
+      (gl:use-program sphere-shader)
+      (set-common-uniforms sphere-shader)
       (draw-indexed sphere-va sphere-index-count)
       (unbind sphere-va)
+      (unbind sphere-ib)
       (incf (renderer-draw-calls *renderer*))))
-  
-  (with-slots (quad-vb quad-va quad-shader quad-vertex-data quad-ib quad-index-count) *renderer*
-    (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
-    (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
+
+  (with-slots (camera-shader quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*
     (when (plusp quad-index-count)
       (bind quad-vb)
       (bind quad-va)
+      (bind quad-ib)
       (set-index-buffer quad-va quad-ib)
-      (when (new-batch? quad-vertex-data)
-	(upload-data quad-vb quad-vertex-data))
+      (gl:use-program quad-shader)
+      (set-common-uniforms quad-shader)
       (draw-indexed quad-va quad-index-count)
       (unbind quad-va)
       (unbind quad-ib)
@@ -314,10 +306,22 @@
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
     (when (plusp line-count)
       (bind line-vb)
-      (when (new-batch? line-vertex-data)
-	(upload-data line-vb line-vertex-data))
       (draw-lines line-va (* 2 line-count))
       (incf (renderer-draw-calls *renderer*)))))
+
+(defun renderer-end-scene ()
+  (renderer-flush))
+
+(defun shutdown ()
+  (with-slots (quad-ib quad-vb quad-va line-vb line-va sphere-ib sphere-vb sphere-va) *renderer*
+    (gl:delete-buffers `(,(id quad-ib)
+			 ,(id quad-vb)
+			 ,(id quad-va)
+			 ,(id line-va)
+			 ,(id line-va)
+			 ,(id sphere-ib)
+			 ,(id sphere-vb)
+			 ,(id sphere-va)))))
 
 (defun quad-index-count-maxed? (renderer)
   (with-slots (quad-index-count max-indices) renderer
@@ -335,7 +339,7 @@
 
     (dotimes (i 4)
       (vector-push-extend
-       (make-quad-vertex
+       (make-vertex
 	:position (cg:transform-point (aref quad-vertex-positions i) transform)
 	:color color)
        quad-vertex-data))
@@ -376,8 +380,8 @@
 (defun draw-line (p0 p1 &optional color)
   (with-slots (line-vertex-data line-count) *renderer*
     (let ((c (or color *white*)))
-      (vector-push-extend (make-line-vertex :position p0 :color c) line-vertex-data)
-      (vector-push-extend (make-line-vertex :position p1 :color c) line-vertex-data))
+      (vector-push-extend (make-vertex :position p0 :color c) line-vertex-data)
+      (vector-push-extend (make-vertex :position p1 :color c) line-vertex-data))
     (incf line-count)))
 
 #|================================================================================|#
@@ -403,7 +407,7 @@
     (do ((i 0 (+ i 1)))
 	((= i 4) r)
       (vector-push
-       (make-quad-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
+       (make-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
 
 (defun draw-plane-normal (normal &optional center (scale (vec 25.0 25.0 25.0)))
   (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
@@ -473,7 +477,7 @@
     (with-slots (quad-vertex-data) *renderer*
       (loop for v across verts
 	    do (vector-push-extend
-		(make-quad-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data)))
+		(make-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data)))
 
     (with-slots (quad-index-count quad-count quad-vertex-count) *renderer*
       (incf quad-index-count 18)
@@ -498,7 +502,7 @@
 			       (vec +0.0 +0.5 -0.5)
 			       (vec +0.5 +0.5 +0.5))
 	  do (vector-push-extend
-	      (make-quad-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data))
+	      (make-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data))
     (incf quad-index-count 6)
     (incf quad-count)
     (incf quad-vertex-count 6)))
@@ -529,13 +533,14 @@
 (defun draw-sphere (radius)
   (let* ((vertex-count *unit-sphere-vertex-count*)
 	 (globe (sphere 1.0 vertex-count)))
-    (with-slots (sphere-vertex-data sphere-index-count) *renderer*
+    (with-slots (sphere-vertex-data sphere-index-count sphere-shader) *renderer*
+      (gl:use-program sphere-shader)
       (dotimes (i vertex-count)
 	(dotimes (j (+ vertex-count 1))
 	  (let ((v1 (aref globe i j))
 		(v2 (aref globe (+ 1 i) j)))
 	    (vector-push-extend
-	     (make-quad-vertex :position (cg:vec* v1 radius) :color *red*) sphere-vertex-data)
+	     (make-vertex :position (cg:vec* v1 radius) :color *red*) sphere-vertex-data)
 	    (vector-push-extend
-	     (make-quad-vertex :position (cg:vec* v2 radius) :color *red*) sphere-vertex-data))))
+	     (make-vertex :position (cg:vec* v2 radius) :color *red*) sphere-vertex-data))))
       (incf sphere-index-count (* 6 (array-total-size globe))))))

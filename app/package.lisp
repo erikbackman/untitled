@@ -4,21 +4,44 @@
 
 (defpackage :untitled
   (:nicknames :ut)
-  (:use :cl :trivial-main-thread)
+  (:use #:cl #:trivial-main-thread)
   (:local-nicknames (:cg :sb-cga))
-  (:import-from :cl-glfw3 :set-window-size-callback :set-key-callback)
-  (:import-from :g3d
-   :with-window :poll-events :renderer-reset-stats
-   :renderer-init :renderer-begin-scene :renderer-set-clear-color
-   :render-batch :handle-key-input :handle-mouse-movement
-   :draw-quad-rotated :draw-cube :draw-plane-points :draw-plane-normal :draw-line
-   :renderer-flush :swap-buffers :shutdown
-   :camera-handle-keyboard :*camera* :*timestep*
-   :draw-sphere)
-;;  (:import-from :cl-opengl)
-  (:import-from :alexandria :switch :with-gensyms)
-  (:import-from :trivia :match :defpattern :guard1)
-;;  (:import-from :gl :clear)
-  (:import-from :sb-cga :transform-point :translate :vec :matrix*)
-;;  (:shadow :with-window :create-shader)
-  )
+  (:import-from #:cl-glfw3
+   :set-window-size-callback
+   :set-key-callback)
+  (:import-from #:g3d
+   :with-window
+   :poll-events
+   :renderer-reset-stats
+   :renderer-init
+   :renderer-begin-scene
+   :renderer-set-clear-color
+   :handle-key-input
+   :handle-mouse-movement
+   :draw-quad-rotated
+   :draw-cube
+   :draw-plane-points
+   :draw-plane-normal
+   :draw-line
+   :swap-buffers
+   :shutdown
+   :renderer-present
+   :camera-handle-keyboard
+   :*camera*
+   :*timestep*
+   :draw-sphere
+   :renderer
+   :shader-set-mat4
+   :shader-get-uniform
+   :*renderer*
+   :renderer-get-shader
+   :sphere-shader
+   :quad-shader)
+  (:import-from #:alexandria
+   :switch
+   :with-gensyms)
+  (:import-from #:trivia
+   :match
+   :defpattern
+   :guard1)
+  (:import-from :sb-cga :transform-point :translate :vec :matrix*))
