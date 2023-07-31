@@ -27,21 +27,6 @@
 
 (defparameter *max-quads* 40)
 
-(defstruct quad-vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
-
-(defun quad-vertex-array? (array)
-  (every #'quad-vertex-p array))
-
-(defstruct line-vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
-
-(defstruct sphere-vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
-
 (defstruct vertex
   (position (cg:vec 0.0 0.0 0.0))
   (color #(1.0 1.0 1.0 1.0)))
@@ -83,8 +68,7 @@
     (:vec3 12)
     (:vec4 16)
     (:mat4 64)
-    (:quad-vertex 28)
-    (:line-vertex 28)))
+    (:vertex 28)))
 
 (defun renderer-reset-stats ()
   (with-slots (draw-calls) *renderer*
@@ -130,20 +114,20 @@
   (let* ((max-quads 10000)
 	 (max-vertices (* 4 max-quads))
 	 (max-indices (* 6 max-quads))
-
+	 
 	 ;; Quads
-	 (vb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
+	 (vb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (ib (make-instance 'index-buffer :data (make-quad-indices max-indices)))
 	 (va (make-instance 'vertex-array))
 	 (shader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Lines
-	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :line-vertex))))
+	 (lvb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (lva (make-instance 'vertex-array))
 	 (lshader (shader-from-file "shaders/shader.glsl"))
 
 	 ;; Sphere
-	 (svb (make-instance 'vertex-buffer :size (* max-vertices (size-of :quad-vertex))))
+	 (svb (make-instance 'vertex-buffer :size (* max-vertices (size-of :vertex))))
 	 (sib (make-instance 'index-buffer :data (make-sphere-indices max-indices)))
 	 (sva (make-instance 'vertex-array))
 	 (sshader (shader-from-file "shaders/sphere-shader.glsl")))
@@ -280,11 +264,12 @@
 (defmacro renderer-begin-scene (&body draw-calls)
   `(progn
      (gl:clear :color-buffer-bit :depth-buffer-bit)
-     (gl:use-program (renderer-quad-shader *renderer*))
+;;     (gl:use-program (renderer-camera-shader *renderer*))
      (let* ((shader (renderer-quad-shader *renderer*))
 	    (fov (camera-fov *camera*))
 	    (projection (mat4-perspective (deg->rad fov) *aspect* 0.1 100.0))
 	    (view (camera-view *camera*)))
+       (gl:use-program shader)
        (shader-set-mat4 shader "u_view" view)
        (shader-set-mat4 shader "u_proj" projection)
        (shader-set-mat4 shader "u_model" (cg:translate (vec 0.0 0.0 0.0)))
@@ -293,18 +278,19 @@
      ,@draw-calls
      (next-batch)))
 
+;; TODO Uniform shader for camera
+(defun set-common-uniforms (shader)
+  (shader-set-mat4 shader "u_view" (camera-view *camera*))
+  (shader-set-mat4 shader "u_proj" (camera-projection *camera* *aspect*))
+  (shader-set-mat4 shader "u_model" (cg:translate* 0.0 0.0 0.0))
+  (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0))
+
 (defun renderer-present ()
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (with-slots (sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
+  (with-slots (camera-shader sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
     (when (plusp sphere-index-count)
       (gl:use-program sphere-shader)
-
-      (shader-set-float sphere-shader "u_ambient" 1.0 1.0 1.0 1.0)
-      (shader-set-mat4 sphere-shader "u_view" (camera-view *camera*))
-      (shader-set-mat4 sphere-shader "u_proj" (camera-projection *camera* *aspect*))
-      ;; Shouldn't have to do this, nor here nor in begin scene.. Camera needs it's own shader.
-      (shader-set-mat4 sphere-shader "u_model" (cg:translate* 0.0 0.0 0.0))
-      
+      (set-common-uniforms sphere-shader)
       (bind sphere-vb)
       (bind sphere-va)
       (bind sphere-ib)
@@ -314,15 +300,13 @@
       (unbind sphere-ib)
       (incf (renderer-draw-calls *renderer*))))
 
-  (with-slots (quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*
+  (with-slots (camera-shader quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*
     (when (plusp quad-index-count)
       (bind quad-vb)
       (bind quad-va)
       (bind quad-ib)
       (set-index-buffer quad-va quad-ib)
-      (gl:use-program quad-shader)
-      (shader-set-mat4 quad-shader "u_view" (camera-view *camera*))
-      (shader-set-mat4 quad-shader "u_proj" (camera-projection *camera* *aspect*))
+      (set-common-uniforms quad-shader)
       (draw-indexed quad-va quad-index-count)
       (unbind quad-va)
       (unbind quad-ib)
