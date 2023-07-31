@@ -1,0 +1,11 @@
+* Dynamic scenes
+Uploading something like a sphere on every frame is very slow so for
+now lets set up and upload the data once per scene with begin-scene
+then renderer-present may be called on every frame. The question is,
+how do we update the geometry?.
+
+I could stick to static scenes for now and perhaps upload new data
+whenever the scene changes which obviously shouldn't be done
+frequently because then I'm back to essentially uploading every
+frame. So in order to support a updating geometry often I think I
+would need to handle these changes in the rendering pipeline.
