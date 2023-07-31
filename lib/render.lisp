@@ -186,15 +186,15 @@
 		      :draw-calls 0))))
 
 (defun renderer-set-clear-color (rgba)
-  (gl:clear-color (aref rgba 0) (aref rgba 1) (aref rgba 2) (aref rgba 3)))
+  (with-vec4 (r g b a) rgba (gl:clear-color r g b a)))
 
 #|================================================================================|#
 #| Batching                                                                       |#
 #|================================================================================|#
 (defun upload-data (buffer vertex-array)
-  (declare (ignore buffer))
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
 (:position #(x y z w) :color (r g b a))."
+  (declare (ignore buffer))
   ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
   ;; how many elements we pushed.
   (let* ((total-size (* 7 (fill-pointer vertex-array)))
@@ -290,6 +290,12 @@
       (unbind sphere-ib)
       (incf (renderer-draw-calls *renderer*))))
 
+  (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
+    (when (plusp line-count)
+      (bind line-vb)
+      (draw-lines line-va (* 2 line-count))
+      (incf (renderer-draw-calls *renderer*))))
+  
   (with-slots (camera-shader quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*
     (when (plusp quad-index-count)
       (bind quad-vb)
@@ -301,12 +307,6 @@
       (draw-indexed quad-va quad-index-count)
       (unbind quad-va)
       (unbind quad-ib)
-      (incf (renderer-draw-calls *renderer*))))
-  
-  (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
-    (when (plusp line-count)
-      (bind line-vb)
-      (draw-lines line-va (* 2 line-count))
       (incf (renderer-draw-calls *renderer*)))))
 
 (defun renderer-end-scene ()
