@@ -27,22 +27,13 @@
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0)
   (gl:clear-depth 1.0)
-  (gl:matrix-mode :modelview)
   (gl:enable :multisample :depth-test)
   (gl:depth-func :lequal)
   (gl:depth-mask t)
-  
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:enable :blend)
-
-  ;;(gl:cull-face :front)
-  ;;(gl:front-face :cw)
-  ;;(gl:disable :cull-face) ;; disable for now
-
-  (gl:line-width 3.0)
-  (gl:enable :line-smooth)
-  
-  (gl:hint :perspective-correction-hint :nicest))
+  (gl:line-width 4.0)
+  (gl:enable :line-smooth))
 
 (glfw:def-window-size-callback update-viewport (window w h)
   (declare (ignore window))
@@ -89,7 +80,10 @@
 (defmacro with-window ((&key title width height on-keyboard on-mouse) &body body)
   `(glfw:with-init-window (:title ,title
 			   :width ,width :height ,height
-			   :samples 4 :refresh-rate 60)
+			   :samples 4 :refresh-rate 60
+			   :context-version-minor 3
+			   :context-version-major 3
+			   :opengl-profile :opengl-core-profile)
      (setf %gl:*gl-get-proc-address* #'glfw:get-proc-address)
 
      (when ,on-keyboard (glfw:set-key-callback ,on-keyboard))
