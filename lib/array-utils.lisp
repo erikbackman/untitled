@@ -31,6 +31,16 @@
 			 (,z (aref ,a 2)))
 	 ,@body))))
 
+(defmacro with-vec4 ((x y z w) vec &body body)
+  (let ((a (gensym)))
+    `(let* ((,a ,vec))
+       (declare (sb-pcl::%variable-rebinding a vec))
+       (symbol-macrolet ((,x (aref ,a 0))
+			 (,y (aref ,a 1))
+			 (,z (aref ,a 2))
+			 (,w (aref ,a 3)))
+	 ,@body))))
+
 (defun array2->array1 (arr)
   (destructuring-bind (n m) (array-dimensions arr)
     (let ((v (make-array (* n m))))
