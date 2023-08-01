@@ -107,8 +107,8 @@ Example:
   (gl:bind-vertex-array 0))
 
 (defun set-index-buffer (va ib)
-  (bind ib)
   (bind va)
+  (bind ib)
   (setf (slot-value va 'index-buffer) ib))
 
 (defun get-index-buffer (va)
@@ -125,4 +125,5 @@ Example:
 	       (assert (integerp offset))
 	       (gl:enable-vertex-attrib-array i)
 	       (gl:vertex-attrib-pointer i count type nil stride
-					 (cffi:inc-pointer (cffi:null-pointer) offset))))))
+					 (cffi:inc-pointer (cffi:null-pointer) offset)))))
+  (unbind va))

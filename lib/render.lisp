@@ -191,10 +191,9 @@
 #|================================================================================|#
 #| Batching                                                                       |#
 #|================================================================================|#
-(defun upload-data (buffer vertex-array)
+(defun upload-data (vbo vertex-array)
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
 (:position #(x y z w) :color (r g b a))."
-  (declare (ignore buffer))
   ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
   ;; how many elements we pushed.
   (let* ((total-size (* 7 (fill-pointer vertex-array)))
@@ -213,7 +212,9 @@
 	     (loop for c across (slot-value vertex 'color)
 		   do (setf (gl:glaref glarray gl-index) c)
 		      (incf gl-index)))
+    (bind vbo)
     (gl:buffer-sub-data :array-buffer glarray :buffer-offset 0)
+    (unbind vbo)
     (gl:free-gl-array glarray)))
 
 (defun new-batch? (vertex-data)
@@ -222,20 +223,13 @@
 (defun renderer-flush ()
   (with-slots (sphere-vertex-data sphere-va sphere-vb) *renderer*
     (when (new-batch? sphere-vertex-data)
-      (bind sphere-vb)
-      (bind sphere-va)
-      (upload-data sphere-vb sphere-vertex-data)
-      (unbind sphere-vb)
-      (unbind sphere-va)))
+      (print "upload")
+      (upload-data sphere-vb sphere-vertex-data)))
   (with-slots (quad-vertex-data quad-va quad-vb) *renderer*
     (when (new-batch? quad-vertex-data)
-      (bind quad-vb)
-      (bind quad-va)
-      (upload-data quad-vb quad-vertex-data)
-      (unbind quad-vb)
-      (unbind quad-va)))
+      (print "upload")
+      (upload-data quad-vb quad-vertex-data)))
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
-    (bind line-vb)
     (when (new-batch? line-vertex-data)
       (upload-data line-vb line-vertex-data))))
 
@@ -279,34 +273,25 @@
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (with-slots (camera-shader sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
     (when (plusp sphere-index-count)
-      (bind sphere-vb)
-      (bind sphere-va)
-      (bind sphere-ib)
+      ;; set-index-buffer binds both the va and ib so no need to bind any of theme here.
       (set-index-buffer sphere-va sphere-ib)
       (gl:use-program sphere-shader)
       (set-common-uniforms sphere-shader)
+      ;; draw-indexed will also bind the va..
+      ;; Could just pass the index-buffer to draw-indexed
+      ;; which would then call set-index-buffer.
       (draw-indexed sphere-va sphere-index-count)
-      (unbind sphere-va)
-      (unbind sphere-ib)
       (incf (renderer-draw-calls *renderer*))))
-
   (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
     (when (plusp line-count)
-      (bind line-vb)
       (draw-lines line-va (* 2 line-count))
       (incf (renderer-draw-calls *renderer*))))
-  
   (with-slots (camera-shader quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*
     (when (plusp quad-index-count)
-      (bind quad-vb)
-      (bind quad-va)
-      (bind quad-ib)
       (set-index-buffer quad-va quad-ib)
       (gl:use-program quad-shader)
       (set-common-uniforms quad-shader)
       (draw-indexed quad-va quad-index-count)
-      (unbind quad-va)
-      (unbind quad-ib)
       (incf (renderer-draw-calls *renderer*)))))
 
 (defun renderer-end-scene ()
