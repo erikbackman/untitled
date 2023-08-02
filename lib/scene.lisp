@@ -1,60 +1,126 @@
 (in-package :g3d)
 
-(defparameter *default-scene* '())
-
 (defstruct scene
   (dirty nil)
   (environment (make-hash-table))
   (objects (make-hash-table)))
 
-(defparameter *scene* (make-scene))
-(defparameter *scene-update-callbacks* '())
-
-(defun scene-set (scene)
-  (setf *default-scene* scene))
+(defparameter *current-scene* (make-scene))
 
 (defun scene-dirty? ()
-  (slot-value *scene* 'dirty))
+  (slot-value *current-scene* 'dirty))
 
-(defun current-scene-objects ()
-  (scene-objects *scene*))
+(defun get-variable (var scene)
+  (gethash var (slot-value scene 'environment)))
 
-(defun scene-object-count ()
-  (hash-table-count (current-scene-objects)))
+(defun set-variable (var value scene)
+  (setf (gethash var (slot-value scene 'environment)) value)
+  (setf (slot-value scene 'dirty) t))
 
-(defun scene-current-environment ()
-  (scene-environment *scene*))
+(defun get-objects (scene)
+  (slot-value scene 'objects))
 
-(defun scene-get-variable (name)
-  (gethash name (scene-current-environment)))
+(defgeneric draw (obj))
 
-(defun scene-set-variable (var value)
-  (setf (gethash var (scene-current-environment)) value))
+(defclass object ()
+  ((scene
+    :initarg :scene
+    :accessor scene)))
 
-(defun scene-make-dirty ()
-  (setf (slot-value *scene* 'dirty) t))
+(defclass quad (object)
+  ((position
+    :initarg :position
+    :initform (vec 0.0 0.0 0.0)
+    :type (or symbol vec))
+   (scale
+    :initarg :scale
+    :initform 1.0
+    :accessor scale)))
 
-(defun scene-add (draw-function)
-  (let ((id (scene-object-count)))
-    (setf (gethash id (current-scene-objects)) draw-function)
-    (scene-make-dirty)
-    id))
+(defclass cube (object)
+  ((position
+    :initarg :position
+    :initform (vec 0.0 0.0 0.0)
+    :type (or symbol vec))))
 
-(defun scene-remove (id)
-  (remhash id (current-scene-objects))
-  (scene-make-dirty))
+(defclass sphere (object)
+  ((radius
+    :initarg :radius
+    :initform 1.0
+    :accessor radius
+    :type (or symbol single-float))))
 
-(defun scene-clear ()
-  (let ((h (current-scene-objects)))
-    (maphash #'(lambda (key val) (declare (ignore val))
-		 (remhash key h))
-	     h))
-  (scene-make-dirty))
+(defclass plane (object)
+  ((normal
+    :initarg :normal
+    :initform (vec 1.0 1.0 1.0)
+    :accessor normal
+    :type (or symbol vec))
+   (point
+    :initarg :point
+    :initform (vec 0.0 0.0 0.0)
+    :accessor point
+    :type (or symbol vec))
+   (scale
+    :initarg :scale
+    :initform (vec 25.0 25.0 25.0)
+    :accessor scale)
+   (color
+    :initarg :color
+    :initform g3d:*cyan*
+    :accessor color)))
+
+(defclass line (object)
+  ((color
+    :initarg :color
+    :initform #(1.0 1.0 1.0 1.0)
+    :accessor color)
+   (start
+    :initarg :start
+    :initform (vec 0.0 0.0 0.0)
+    :accessor start)
+   (end
+    :initarg :end
+    :initform (vec 0.0 0.0 0.0)
+    :accessor end)))
+
+(defun scene-add (obj scene)
+  ;; Would use a user supplied name/id later
+  (setf (gethash (hash-table-count (slot-value scene 'objects))
+		 (slot-value scene 'objects))
+	obj)
+  (setf (slot-value obj 'scene) scene)
+  (setf (slot-value scene 'dirty) t))
+
+(defun lookup-slot-value (obj slot)
+  (let ((value (slot-value obj slot)))
+    (case (type-of value)
+      (symbol (get-variable value (slot-value obj 'scene)))
+      (t value))))
+
+(defmethod draw ((obj sphere))
+  (draw-sphere (lookup-slot-value obj 'radius)))
+
+(defmethod draw ((obj plane))
+  (draw-plane-normal (lookup-slot-value obj 'normal)
+		     *origin*
+		     (slot-value obj 'scale)
+		     (slot-value obj 'color)))
+
+(defmethod draw ((obj cube))
+  (with-vec3 (x y z) (lookup-slot-value obj 'position)
+    (draw-cube x y z)))
+
+(defmethod draw ((obj line))
+  (draw-line (lookup-slot-value obj 'start)
+	     (lookup-slot-value obj 'end)
+	     (slot-value obj 'color)))
+
+(defun scene-set (&rest objects)
+  (dolist (obj objects)
+    (scene-add obj *current-scene*)))
 
 (defun scene-submit ()
-  (let ((calls *default-scene*))
-    (maphash (lambda (key val)
-	       (declare (ignore key))
-	       (push val calls))
-	     (current-scene-objects))
-    (eval `(renderer-begin-scene ,@calls))))
+  (renderer-begin-scene
+    (dolist (obj (alexandria:hash-table-values (scene-objects *current-scene*)))
+      (draw obj))))

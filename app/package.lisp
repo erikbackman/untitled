@@ -39,8 +39,11 @@
    :quad-shader
    :scene-submit
    :scene-add
-   :scene-remove
-   :scene-set)
+   :scene-set
+   :line
+   :cube
+   :sphere
+   :plane)
   (:import-from #:alexandria
    :switch
    :with-gensyms)

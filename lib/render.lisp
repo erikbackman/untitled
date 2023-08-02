@@ -19,8 +19,8 @@
 (defparameter *max-quads* 40)
 
 (defstruct vertex
-  (position (cg:vec 0.0 0.0 0.0))
-  (color #(1.0 1.0 1.0 1.0)))
+	   (position (cg:vec 0.0 0.0 0.0))
+	   (color #(1.0 1.0 1.0 1.0)))
 
 (defstruct renderer
   (quad-va)
@@ -33,7 +33,6 @@
   (quad-max-count)
   (quad-indices)
   (quad-index-count)
-  (quad-vertex-count)
 
   (line-va)
   (line-vb)
@@ -45,7 +44,6 @@
   (sphere-vb)
   (sphere-ib)
   (sphere-vertex-data)
-  (sphere-vertex-positions)
   (sphere-shader)
   (sphere-indices)
   (sphere-index-count)
@@ -159,7 +157,6 @@
 		      :quad-vertex-data (make-array 0 :fill-pointer 0)
 		      :max-indices max-indices
 		      :quad-index-count 0
-		      :quad-vertex-count 0
 
 		      :sphere-va sva
 		      :sphere-vb svb
@@ -225,10 +222,8 @@
       (upload-data line-vb line-vertex-data))))
 
 (defun begin-batch ()
-  (with-slots (quad-index-count quad-vertex-count quad-count quad-vertex-data quad-vertex-data-base)
-      *renderer*
+  (with-slots (quad-index-count quad-count quad-vertex-data quad-vertex-data-base) *renderer*
     (setf quad-index-count 0)
-    (setf quad-vertex-count 0)
     (setf quad-count 0)
     (setf (fill-pointer quad-vertex-data) 0))
   (with-slots (sphere-index-count sphere-vertex-data) *renderer*
@@ -255,7 +250,7 @@
 
 (defun next-scene ()
   (scene-submit)
-  (setf (scene-dirty *scene*) nil))
+  (setf (scene-dirty *current-scene*) nil))
 
 ;; TODO Uniform shader for camera
 (defun set-common-uniforms (shader)
@@ -311,7 +306,7 @@
 
 (defun draw-quad-transform (transform &optional (color *white*))
   (with-slots
-	(quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count)
+	(quad-vertex-data quad-vertex-positions quad-index-count quad-count)
       *renderer*
 
     (when (quad-index-count-maxed? *renderer*)
@@ -325,8 +320,7 @@
        quad-vertex-data))
 
     (incf quad-index-count 6)
-    (incf quad-count)
-    (incf quad-vertex-count 4)))
+    (incf quad-count)))
 
 (defun draw-quad-at (x y z &optional color)
   (with-slots (quad-vb quad-vertex-data) *renderer*
@@ -379,25 +373,24 @@
 	   )
       `#(,v1 ,v2 ,v3 ,v4))))
 
-(defun plane (normal tangent &optional (center *origin*) scale)
+(defun plane (normal tangent &optional (center *origin*) scale color)
   (let ((vs (plane-vertices center normal tangent))
 	(r (make-array 4 :fill-pointer 0))
 	(tr (cg:scale scale)))
     (do ((i 0 (+ i 1)))
 	((= i 4) r)
       (vector-push
-       (make-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
+       (make-vertex :position (cg:transform-point (aref vs i) tr) :color color) r))))
 
-(defun draw-plane-normal (normal &optional (center *origin*) (scale (vec 25.0 25.0 25.0)))
-  (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
-    (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center scale)))
+(defun draw-plane-normal (normal &optional (center *origin*) (scale (vec 25.0 25.0 25.0)) (color *cyan*))
+  (with-slots (quad-vertex-data quad-index-count quad-count) *renderer*
+    (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center scale color)))
       (vector-push-extend (aref vs 0) quad-vertex-data)
       (vector-push-extend (aref vs 1) quad-vertex-data)
       (vector-push-extend (aref vs 2) quad-vertex-data)
       (vector-push-extend (aref vs 3) quad-vertex-data)
       (incf quad-index-count 6)
-      (incf quad-count)
-      (incf quad-vertex-count 4))))
+      (incf quad-count))))
 
 (defun draw-plane-points (p1 p2 p3)
   (draw-plane-normal (cg:cross-product (cg:vec- p1 p2) (cg:vec- p1 p3))))
@@ -458,14 +451,12 @@
 	    do (vector-push-extend
 		(make-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data)))
 
-    (with-slots (quad-index-count quad-count quad-vertex-count) *renderer*
+    (with-slots (quad-index-count quad-count) *renderer*
       (incf quad-index-count 18)
       (incf quad-count 3)
-      (incf quad-vertex-count 6)
       ;; for top and bot
       (incf quad-index-count 3)
-      (incf quad-count 2)
-      (incf quad-vertex-count 3))))
+      (incf quad-count 2))))
 
 (defun draw-prism-at (x y z)
   (draw-prism-transform (matrix* (translate (vec x (+ y 0.0) (- z))))))
@@ -475,7 +466,7 @@
 #|================================================================================|#
 
 (defun draw-triangle-transform (transform)
-  (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
+  (with-slots (quad-vertex-data quad-index-count quad-count) *renderer*
     (loop for v across (vector (vec -0.5 +0.5 +0.5)
 			       (vec +0.0 +0.5 +0.5)
 			       (vec +0.0 +0.5 -0.5)
@@ -483,8 +474,7 @@
 	  do (vector-push-extend
 	      (make-vertex :position (transform-point v transform) :color *blue*) quad-vertex-data))
     (incf quad-index-count 6)
-    (incf quad-count)
-    (incf quad-vertex-count 6)))
+    (incf quad-count)))
 
 (defun draw-triangle-at (x y z)
   (draw-triangle-transform (cg:translate* (- x 0.0) (- y 0.0) (- z 0.0))))
@@ -493,17 +483,16 @@
 #| Spheres                                                                        |#
 #|================================================================================|#
 
-(defun sphere (r p)
-  (let ((verts (make-array `(,(+ p 1) ,(+ p 1)))))
-    (dotimes (i (+ p 1))
-      (let ((lat (linear-map i 0 p (- +pi/2+) +pi/2+)))
-	(dotimes (j (+ p 1))
-	  (let* ((lon (linear-map j 0 p (- +pi+) +pi+))
-		 (x (* r (sin lon) (cos lat)))
-		 (y (* r (sin lon) (sin lat)))
-		 (z (* r (cos lon))))
-	    (setf (aref verts i j) (vec x y z))
-	    ))))
+(defun sphere (radius vertex-count)
+  (let ((verts (make-array `(,(+ vertex-count 1) ,(+ vertex-count 1)))))
+    (dotimes (i (+ vertex-count 1))
+      (let ((lat (linear-map i 0 vertex-count (- +pi/2+) +pi/2+)))
+	(dotimes (j (+ vertex-count 1))
+	  (let* ((lon (linear-map j 0 vertex-count (- +pi+) +pi+))
+		 (x (* radius (sin lon) (cos lat)))
+		 (y (* radius (sin lon) (sin lat)))
+		 (z (* radius (cos lon))))
+	    (setf (aref verts i j) (vec x y z))))))
     verts))
 
 (defparameter *unit-sphere-vertex-count* 100)

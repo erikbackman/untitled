@@ -11,10 +11,10 @@
     (renderer-set-clear-color g3d:*dusk-blue*)
 
     (scene-set
-     '((draw-line (vec -25.0 0.0 0.0) (vec 25.0 0.0 0.0) g3d:*red*)
-       (draw-line (vec 0.0 0.0 -25.0) (vec 0.0 0.0 25.0) g3d:*green*)
-       (draw-line (vec 0.0 -25.0 0.0) (vec 0.0 25.0 0.0) g3d:*blue*)
-       (draw-quad-rotated 0.0 0.5 0.0 90 (vec 1.0 0.0 0.0) #(1.0 1.0 1.0 0.2) 50.0 50.0)))
+     (make-instance 'line :start (vec -25.0 0.0 0.0) :end (vec 25.0 0.0 0.0) :color g3d:*red*)
+     (make-instance 'line :start (vec 0.0 0.0 -25.0) :end (vec 0.0 0.0 25.0) :color g3d:*green*)
+     (make-instance 'line :start (vec 0.0 -25.0 0.0) :end (vec 0.0 25.0 0.0) :color g3d:*blue*)
+     (make-instance 'plane :normal (vec 0.0 1.0 0.0) :scale (vec 50.0 50.0 50.0) :color g3d:*faded*))
     
     (scene-submit)
     
