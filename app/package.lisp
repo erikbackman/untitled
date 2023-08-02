@@ -36,7 +36,11 @@
    :*renderer*
    :renderer-get-shader
    :sphere-shader
-   :quad-shader)
+   :quad-shader
+   :scene-submit
+   :scene-add
+   :scene-remove
+   :scene-set)
   (:import-from #:alexandria
    :switch
    :with-gensyms)

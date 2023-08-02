@@ -18,6 +18,7 @@
 		 (:file "function")
 		 (:file "shader")
 		 (:file "buffer")
+		 (:file "scene")
 		 (:file "window")
 		 (:file "render"))))
   :build-operation "program-op"
