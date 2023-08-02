@@ -7,4 +7,17 @@
   (:import-from :trivia :match :defpattern :guard1)
   (:import-from :gl :clear)
   (:import-from :sb-cga :transform-point :translate :vec :matrix*)
-  (:shadow :with-window :create-shader))
+  (:shadow :with-window :create-shader)
+  (:export
+   :*pink*
+   :*white*
+   :*red*
+   :*green*
+   :*blue*
+   :*cyan*
+   :*faded*
+   :*black*
+   :*dusk-blue*
+   :*faded*
+   :*black*
+   :*dusk-blue*))

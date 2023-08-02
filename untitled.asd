@@ -18,6 +18,7 @@
 		 (:file "function")
 		 (:file "shader")
 		 (:file "buffer")
+		 (:file "colors")
 		 (:file "scene")
 		 (:file "window")
 		 (:file "render"))))
