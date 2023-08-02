@@ -263,7 +263,7 @@
      (next-batch)))
 
 (defun next-scene ()
-  (scene-draw)
+  (scene-submit)
   (setf (scene-dirty *scene*) nil))
 
 ;; TODO Uniform shader for camera
