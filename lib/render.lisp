@@ -290,9 +290,6 @@
       (draw-indexed quad-va quad-index-count)
       (incf (renderer-draw-calls *renderer*)))))
 
-(defun renderer-end-scene ()
-  (renderer-flush))
-
 (defun shutdown ()
   (with-slots (quad-ib quad-vb quad-va line-vb line-va sphere-ib sphere-vb sphere-va) *renderer*
     (gl:delete-buffers `(,(id quad-ib)
