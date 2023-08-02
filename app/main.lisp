@@ -8,7 +8,7 @@
     
     (renderer-init)
     (renderer-reset-stats)
-    (renderer-set-clear-color *dusk-blue*)
+    (renderer-set-clear-color g3d:*dusk-blue*)
 
     (scene-set
      '((draw-line (vec -25.0 0.0 0.0) (vec 25.0 0.0 0.0) g3d:*red*)
