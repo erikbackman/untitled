@@ -191,7 +191,7 @@
 #|================================================================================|#
 #| Batching                                                                       |#
 #|================================================================================|#
-(defun upload-data (vbo vertex-array)
+(defun upload-data (vbo vertex-array &optional (offset 0))
   "Upload VERTEX-ARRAY to a vertex BUFFER where VERTEX-ARRAY is an array of vertices of the form:
 (:position #(x y z w) :color (r g b a))."
   ;; total-size: 7 elements per vertex (3 for pos and 4 for color) *
@@ -213,7 +213,7 @@
 		   do (setf (gl:glaref glarray gl-index) c)
 		      (incf gl-index)))
     (bind vbo)
-    (gl:buffer-sub-data :array-buffer glarray :buffer-offset 0)
+    (gl:buffer-sub-data :array-buffer glarray :buffer-offset offset)
     (unbind vbo)
     (gl:free-gl-array glarray)))
 
@@ -262,6 +262,10 @@
      ,@draw-calls
      (next-batch)))
 
+(defun next-scene ()
+  (scene-draw)
+  (setf (scene-dirty *scene*) nil))
+
 ;; TODO Uniform shader for camera
 (defun set-common-uniforms (shader)
   (shader-set-mat4 shader "u_view" (camera-view *camera*))
@@ -270,6 +274,7 @@
   (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0))
 
 (defun renderer-present ()
+  (when (scene-dirty?) (next-scene))
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (with-slots (camera-shader sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
     (when (plusp sphere-index-count)
@@ -317,7 +322,9 @@
 #|================================================================================|#
 
 (defun draw-quad-transform (transform &optional (color *white*))
-  (with-slots (quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count) *renderer*
+  (with-slots
+	(quad-vertex-data quad-vertex-positions quad-index-count quad-count quad-vertex-count)
+      *renderer*
 
     (when (quad-index-count-maxed? *renderer*)
       (next-batch))
@@ -340,11 +347,10 @@
 (defun draw-quad (&optional color) (draw-quad-at 0 0 0 color))
 
 (defun draw-quad-rotated (x y z rotation axis &optional color (scale-x 1.0) (scale-y 1.0))
-  (with-slots (quad-vertex-positions quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
-    (let ((transform (matrix* (cg:translate (cg:vec x y z) )
-			      (cg:rotate-around axis (deg->rad rotation))
-			      (cg:scale* scale-x scale-y 1.0))))
-      (draw-quad-transform transform color))))
+  (let ((transform (matrix* (cg:translate (cg:vec x y z) )
+			    (cg:rotate-around axis (deg->rad rotation))
+			    (cg:scale* scale-x scale-y 1.0))))
+    (draw-quad-transform transform color)))
 
 #|================================================================================|#
 #| Cubes                                                                          |#
@@ -385,8 +391,8 @@
 	   )
       `#(,v1 ,v2 ,v3 ,v4))))
 
-(defun plane (normal tangent &optional center scale)
-  (let ((vs (plane-vertices (or center *origin*) normal tangent))
+(defun plane (normal tangent &optional (center *origin*) scale)
+  (let ((vs (plane-vertices center normal tangent))
 	(r (make-array 4 :fill-pointer 0))
 	(tr (cg:scale scale)))
     (do ((i 0 (+ i 1)))
@@ -394,7 +400,7 @@
       (vector-push
        (make-vertex :position (cg:transform-point (aref vs i) tr) :color *cyan*) r))))
 
-(defun draw-plane-normal (normal &optional center (scale (vec 25.0 25.0 25.0)))
+(defun draw-plane-normal (normal &optional (center *origin*) (scale (vec 25.0 25.0 25.0)))
   (with-slots (quad-vertex-data quad-index-count quad-count quad-vertex-count) *renderer*
     (let* ((vs (plane normal (sb-cga:vec 1.0 0.0 0.0) center scale)))
       (vector-push-extend (aref vs 0) quad-vertex-data)
@@ -515,7 +521,7 @@
 (defparameter *unit-sphere-vertex-count* 100)
 (defparameter *unit-sphere* (sphere 1 *unit-sphere-vertex-count*))
 
-(defun draw-sphere (radius)
+(defun draw-sphere (radius &optional (color *red*))
   (let* ((vertex-count *unit-sphere-vertex-count*)
 	 (globe (sphere 1.0 vertex-count)))
     (with-slots (sphere-vertex-data sphere-index-count sphere-shader) *renderer*
@@ -525,7 +531,7 @@
 	  (let ((v1 (aref globe i j))
 		(v2 (aref globe (+ 1 i) j)))
 	    (vector-push-extend
-	     (make-vertex :position (cg:vec* v1 radius) :color *red*) sphere-vertex-data)
+	     (make-vertex :position (cg:vec* v1 radius) :color color) sphere-vertex-data)
 	    (vector-push-extend
-	     (make-vertex :position (cg:vec* v2 radius) :color *red*) sphere-vertex-data))))
+	     (make-vertex :position (cg:vec* v2 radius) :color color) sphere-vertex-data))))
       (incf sphere-index-count (* 6 (array-total-size globe))))))
