@@ -252,6 +252,11 @@
   (scene-submit)
   (setf (scene-dirty *current-scene*) nil))
 
+(defun scene-submit ()
+  (renderer-begin-scene
+    (dolist (obj (alexandria:hash-table-values (scene-objects *current-scene*)))
+      (draw obj))))
+
 ;; TODO Uniform shader for camera
 (defun set-common-uniforms (shader)
   (shader-set-mat4 shader "u_view" (camera-view *camera*))
@@ -273,8 +278,10 @@
       ;; which would then call set-index-buffer.
       (draw-indexed sphere-va sphere-index-count)
       (incf (renderer-draw-calls *renderer*))))
-  (with-slots (line-vertex-data line-vb line-va line-count) *renderer*
+  (with-slots (line-vertex-data line-vb line-va line-count line-shader) *renderer*
     (when (plusp line-count)
+      (gl:use-program line-shader)
+      (set-common-uniforms line-shader)
       (draw-lines line-va (* 2 line-count))
       (incf (renderer-draw-calls *renderer*))))
   (with-slots (camera-shader quad-vb quad-va quad-shader quad-ib quad-index-count) *renderer*

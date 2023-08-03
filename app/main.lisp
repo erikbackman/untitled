@@ -10,12 +10,12 @@
     (renderer-reset-stats)
     (renderer-set-clear-color g3d:*dusk-blue*)
 
-    (scene-set
-     (make-instance 'line :start (vec -25.0 0.0 0.0) :end (vec 25.0 0.0 0.0) :color g3d:*red*)
-     (make-instance 'line :start (vec 0.0 0.0 -25.0) :end (vec 0.0 0.0 25.0) :color g3d:*green*)
-     (make-instance 'line :start (vec 0.0 -25.0 0.0) :end (vec 0.0 25.0 0.0) :color g3d:*blue*)
-     (make-instance 'plane :normal (vec 0.0 1.0 0.0) :scale (vec 50.0 50.0 50.0) :color g3d:*faded*))
-    
+    (scene-add (get-current-scene)
+      (geometry :l1 'line :start #(-25.0 0.0 0.0) :end #(25.0 0.0 0.0) :color g3d:*red*)
+      (geometry :l2 'line :start (vec 0.0 0.0 -25.0) :end (vec 0.0 0.0 25.0) :color g3d:*green*)
+      (geometry :l3 'line :start (vec 0.0 -25.0 0.0) :end (vec 0.0 25.0 0.0) :color g3d:*blue*)
+      (geometry :pl1 'plane :normal (vec 0.0 1.0 0.0) :scale (vec 50.0 50.0 50.0) :color g3d:*faded*))
+
     (scene-submit)
     
     (let ((time 0.0f0)
@@ -33,3 +33,4 @@
     (shutdown)))
 
 (main)
+

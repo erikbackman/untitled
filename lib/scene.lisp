@@ -7,6 +7,16 @@
 
 (defparameter *current-scene* (make-scene))
 
+(defun geometry (id shape &rest spec)
+  (apply #'make-instance shape :id id spec))
+
+(defun get-current-scene ()
+  (or *current-scene*
+      (setf *current-scene* (make-scene))))
+
+(defun make-scene-dirty (scene)
+  (setf (slot-value scene 'dirty) t))
+
 (defun scene-dirty? ()
   (slot-value *current-scene* 'dirty))
 
@@ -15,23 +25,72 @@
 
 (defun set-variable (var value scene)
   (setf (gethash var (slot-value scene 'environment)) value)
-  (setf (slot-value scene 'dirty) t))
+  (make-scene-dirty scene))
 
 (defun get-objects (scene)
   (slot-value scene 'objects))
 
+(defun get-object-by-id (id scene)
+  (gethash id (get-objects scene)))
+
+(defun lookup-slot-value (obj slot)
+  (let ((value (slot-value obj slot)))
+    (if (symbolp value) 
+	(get-variable value (slot-value obj 'scene))
+	value)))
+
+(defmethod draw ((obj sphere))
+  (draw-sphere (lookup-slot-value obj 'radius)))
+
+(defmethod draw ((obj plane))
+  (draw-plane-normal (lookup-slot-value obj 'normal)
+		     (slot-value obj 'point)
+		     (slot-value obj 'scale)
+		     (slot-value obj 'color)))
+
+(defmethod draw ((obj cube))
+  (with-vec3 (x y z) (lookup-slot-value obj 'position)
+    (draw-cube x y z)))
+
+(defmethod draw ((obj line))
+  (draw-line
+   (slot-value obj 'start)
+   (slot-value obj 'end)
+   (slot-value obj 'color)))
+
+(defun scene-set (&rest objects)
+  (dolist (obj objects)
+    (scene-add obj *current-scene*)))
+
+(defun scene-clear (scene)
+  (clrhash (scene-objects scene))
+  (make-scene-dirty scene))
+
+(defun scene-add (scene &rest objects)
+  (flet ((add (obj)
+	   (setf (gethash (slot-value obj 'id)
+			  (slot-value scene 'objects))
+		 obj)))
+    (dolist (obj objects) (add obj))
+    (make-scene-dirty scene)))
+
+(defun scene-delete (scene id)
+  (remhash id (get-objects scene))
+  (make-scene-dirty scene))
+
 (defgeneric draw (obj))
 
 (defclass object ()
-  ((scene
+  ((id :initarg :id :accessor id)
+   (scene
     :initarg :scene
-    :accessor scene)))
+    :accessor scene
+    :initform (get-current-scene))))
 
 (defclass quad (object)
   ((position
     :initarg :position
-    :initform (vec 0.0 0.0 0.0)
-    :type (or symbol vec))
+    :initform (vec 0.0 0.0 0.0))
    (scale
     :initarg :scale
     :initform 1.0
@@ -40,27 +99,27 @@
 (defclass cube (object)
   ((position
     :initarg :position
-    :initform (vec 0.0 0.0 0.0)
-    :type (or symbol vec))))
+    :initform (vec 0.0 0.0 0.0))))
 
 (defclass sphere (object)
   ((radius
     :initarg :radius
     :initform 1.0
-    :accessor radius
-    :type (or symbol single-float))))
+    :accessor radius)
+   (color
+    :initarg :color
+    :initform *white*
+    :accessor color)))
 
 (defclass plane (object)
   ((normal
     :initarg :normal
     :initform (vec 1.0 1.0 1.0)
-    :accessor normal
-    :type (or symbol vec))
+    :accessor normal)
    (point
     :initarg :point
     :initform (vec 0.0 0.0 0.0)
-    :accessor point
-    :type (or symbol vec))
+    :accessor point)
    (scale
     :initarg :scale
     :initform (vec 25.0 25.0 25.0)
@@ -83,44 +142,3 @@
     :initarg :end
     :initform (vec 0.0 0.0 0.0)
     :accessor end)))
-
-(defun scene-add (obj scene)
-  ;; Would use a user supplied name/id later
-  (setf (gethash (hash-table-count (slot-value scene 'objects))
-		 (slot-value scene 'objects))
-	obj)
-  (setf (slot-value obj 'scene) scene)
-  (setf (slot-value scene 'dirty) t))
-
-(defun lookup-slot-value (obj slot)
-  (let ((value (slot-value obj slot)))
-    (case (type-of value)
-      (symbol (get-variable value (slot-value obj 'scene)))
-      (t value))))
-
-(defmethod draw ((obj sphere))
-  (draw-sphere (lookup-slot-value obj 'radius)))
-
-(defmethod draw ((obj plane))
-  (draw-plane-normal (lookup-slot-value obj 'normal)
-		     *origin*
-		     (slot-value obj 'scale)
-		     (slot-value obj 'color)))
-
-(defmethod draw ((obj cube))
-  (with-vec3 (x y z) (lookup-slot-value obj 'position)
-    (draw-cube x y z)))
-
-(defmethod draw ((obj line))
-  (draw-line (lookup-slot-value obj 'start)
-	     (lookup-slot-value obj 'end)
-	     (slot-value obj 'color)))
-
-(defun scene-set (&rest objects)
-  (dolist (obj objects)
-    (scene-add obj *current-scene*)))
-
-(defun scene-submit ()
-  (renderer-begin-scene
-    (dolist (obj (alexandria:hash-table-values (scene-objects *current-scene*)))
-      (draw obj))))

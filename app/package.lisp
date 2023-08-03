@@ -37,13 +37,18 @@
    :renderer-get-shader
    :sphere-shader
    :quad-shader
+   :get-current-scene
+   :with-scene
    :scene-submit
    :scene-add
    :scene-set
    :line
    :cube
    :sphere
-   :plane)
+   :plane
+   :plane%
+   :line%
+   :geometry)
   (:import-from #:alexandria
    :switch
    :with-gensyms)
