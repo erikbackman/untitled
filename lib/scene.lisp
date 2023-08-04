@@ -39,25 +39,6 @@
 	(get-variable value (slot-value obj 'scene))
 	value)))
 
-(defmethod draw ((obj sphere))
-  (draw-sphere (lookup-slot-value obj 'radius)))
-
-(defmethod draw ((obj plane))
-  (draw-plane-normal (lookup-slot-value obj 'normal)
-		     (slot-value obj 'point)
-		     (slot-value obj 'scale)
-		     (slot-value obj 'color)))
-
-(defmethod draw ((obj cube))
-  (with-vec3 (x y z) (lookup-slot-value obj 'position)
-    (draw-cube x y z)))
-
-(defmethod draw ((obj line))
-  (draw-line
-   (slot-value obj 'start)
-   (slot-value obj 'end)
-   (slot-value obj 'color)))
-
 (defun scene-set (&rest objects)
   (dolist (obj objects)
     (scene-add obj *current-scene*)))
@@ -142,3 +123,22 @@
     :initarg :end
     :initform (vec 0.0 0.0 0.0)
     :accessor end)))
+
+(defmethod draw ((obj sphere))
+  (draw-sphere (lookup-slot-value obj 'radius)))
+
+(defmethod draw ((obj plane))
+  (draw-plane-normal (lookup-slot-value obj 'normal)
+		     (slot-value obj 'point)
+		     (slot-value obj 'scale)
+		     (slot-value obj 'color)))
+
+(defmethod draw ((obj cube))
+  (with-vec3 (x y z) (lookup-slot-value obj 'position)
+    (draw-cube x y z)))
+
+(defmethod draw ((obj line))
+  (draw-line
+   (slot-value obj 'start)
+   (slot-value obj 'end)
+   (slot-value obj 'color)))
