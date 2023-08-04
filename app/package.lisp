@@ -38,7 +38,6 @@
    :sphere-shader
    :quad-shader
    :get-current-scene
-   :with-scene
    :scene-submit
    :scene-add
    :scene-set
@@ -46,8 +45,6 @@
    :cube
    :sphere
    :plane
-   :plane%
-   :line%
    :geometry)
   (:import-from #:alexandria
    :switch
