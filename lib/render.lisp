@@ -19,8 +19,8 @@
 (defparameter *max-quads* 40)
 
 (defstruct vertex
-	   (position (cg:vec 0.0 0.0 0.0))
-	   (color #(1.0 1.0 1.0 1.0)))
+  (position (cg:vec 0.0 0.0 0.0))
+  (color #(1.0 1.0 1.0 1.0)))
 
 (defstruct renderer
   (quad-va)
