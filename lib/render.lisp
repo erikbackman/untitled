@@ -256,7 +256,6 @@
   (shader-set-float shader "u_ambient" 1.0 1.0 1.0 1.0))
 
 (defun renderer-present ()
-  (when (scene-dirty?) (next-scene))
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (with-slots (camera-shader sphere-vb sphere-va sphere-shader sphere-ib sphere-index-count) *renderer*
     (when (plusp sphere-index-count)
