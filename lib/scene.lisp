@@ -142,3 +142,16 @@
    (slot-value obj 'start)
    (slot-value obj 'end)
    (slot-value obj 'color)))
+
+(defun next-scene ()
+  (scene-submit)
+  (setf (scene-dirty *current-scene*) nil))
+
+(defun scene-submit ()
+  (render-batch
+    (dolist (obj (alexandria:hash-table-values (scene-objects *current-scene*)))
+      (draw obj))))
+
+(defun draw-scene ()
+  (when (scene-dirty?) (next-scene))
+  (renderer-present))

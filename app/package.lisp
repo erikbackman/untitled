@@ -14,7 +14,6 @@
    :poll-events
    :renderer-reset-stats
    :renderer-init
-   :renderer-begin-scene
    :renderer-set-clear-color
    :handle-key-input
    :handle-mouse-movement
@@ -45,7 +44,8 @@
    :cube
    :sphere
    :plane
-   :geometry)
+   :geometry
+   :draw-scene)
   (:import-from #:alexandria
    :switch
    :with-gensyms)

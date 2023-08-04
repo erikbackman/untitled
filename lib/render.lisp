@@ -241,21 +241,12 @@
   ;;(begin-batch)
   )
 
-(defmacro renderer-begin-scene (&body draw-calls)
+(defmacro render-batch (&body draw-calls)
   `(progn
      (gl:clear :color-buffer-bit :depth-buffer-bit)
      (begin-batch)
      ,@draw-calls
      (next-batch)))
-
-(defun next-scene ()
-  (scene-submit)
-  (setf (scene-dirty *current-scene*) nil))
-
-(defun scene-submit ()
-  (renderer-begin-scene
-    (dolist (obj (alexandria:hash-table-values (scene-objects *current-scene*)))
-      (draw obj))))
 
 ;; TODO Uniform shader for camera
 (defun set-common-uniforms (shader)
@@ -401,25 +392,6 @@
 
 (defun draw-plane-points (p1 p2 p3)
   (draw-plane-normal (cg:cross-product (cg:vec- p1 p2) (cg:vec- p1 p3))))
-
-(defun draw-plane-expr (expr)
-  (draw-plane-normal (expr->normal expr)))
-
-(defun expr->normal (expr)
-  (let ((x 0.0)
-	(y 0.0)
-	(z 1.0))
-    (declare (type (single-float) x y z))
-    (loop with op = (elt expr 0)
-	  for e in (rest expr)
-	  for l = (length e)
-	  for k = (coerce (if (= 2 l) (elt e 0) 1) 'single-float)
-	  for a = (if (= 1 l) (elt e 0) (elt e 1))
-	  do (cond ((eq 'x a) (setf x k))
-		   ((eq 'y a) (setf y k))
-		   ((eq 'z a) (setf z k)))
-	  finally (return (sb-cga:vec (/ x z) z (- (/ y z)))))))
-
 
 #|================================================================================|#
 #| Prisms                                                                         |#

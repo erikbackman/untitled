@@ -25,7 +25,7 @@
 	       (setf *timestep* (* (- time last-frame-time) 1000.0f0))
 	       (setf last-frame-time time)
 	    do
-	       (renderer-present)
+	       (draw-scene)
 	       (camera-handle-keyboard *camera*)
 	       (glfw:swap-buffers)
 	       (glfw:poll-events)))

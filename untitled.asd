@@ -19,9 +19,9 @@
 		 (:file "shader")
 		 (:file "buffer")
 		 (:file "colors")
-		 (:file "scene")
 		 (:file "window")
-		 (:file "render"))))
+		 (:file "render")
+		 (:file "scene"))))
   :build-operation "program-op"
   :description "")
 
